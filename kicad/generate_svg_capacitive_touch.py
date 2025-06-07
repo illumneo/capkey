@@ -11,7 +11,7 @@ Usage:
     xdg-open touch_pads.svg
 """
 import svg
-
+from math import sqrt
 
 def create_pad(x, y, pitch, radius, separation, edge_type=None):
     """
@@ -46,77 +46,37 @@ def create_pad(x, y, pitch, radius, separation, edge_type=None):
 
 
 def create_flower_pad(x, y, pitch, radius, separation, edge_type=None):
-    width = (pitch-radius)/2
-    d_shift = separation
-    points = [x-separation-d_shift, y+separation,
-              x - width + separation, y+separation,
-              x - width + separation, y+width - separation - d_shift,
+    width = (pitch)/2 - radius
+    diag = (radius + separation/2) * sqrt(2)
+    points = [x + radius, y + radius + diag,
+              x + radius, y + width - separation,
+              x + width - diag - separation, y + width - separation,
             ]
+
     parameters = {
         "points": points,
         "stroke": "black",
+        "stroke_linejoin": "round",
         "fill": "black",
-        "stroke_width": radius,
+        "stroke_width": radius*2,
     }
     if edge_type == "start":
-        rotations = [0, -90 ]
+        rotations = [0, 90 ]
     elif edge_type == "end":
-        rotations = [90, 180]
+        rotations = [-90, 180]
     else:
         rotations = [0, 90, 180, 270]
-    return svg.G(elements=[svg.Polygon(**parameters, transform=[svg.Rotate(rot, x, y)]) for rot in rotations])
 
+    elements = []
+    # petal
+    elements += [svg.Polygon(**parameters, transform=[svg.Rotate(rot, x, y)]) for rot in rotations]
+    # stem of petal
+    tw = radius
+    elements += [svg.Line(x1=x+tw/2, y1=y, x2=x+tw/2, y2=y+pitch/4, stroke="black", stroke_width=tw,transform=[svg.Rotate(rot, x, y)]) for rot in rotations]
+    # center of pad
+    elements += [svg.Rect(x=x-tw, y=y-tw, width=tw*2, height=tw*2, fill="black", transform=[svg.Rotate(rot, x, y)]) for rot in rotations]
+    return svg.G(elements=elements)
 
-def create_flower_pad_old(x, y, pitch, radius, separation, edge_type=None):
-    """
-    Creates an SVG polygon representing a flower-shaped capacitive touch pad.
-
-    Args:
-        x (float): X coordinate of the pad center
-        y (float): Y coordinate of the pad center
-        pitch (float): Distance between pad centers
-        radius (float): Corner radius and stroke width of the pad
-        separation (float): Minimum spacing between adjacent pads
-        edge_type (str, optional): Type of pad edge shape:
-            - "start": Only top petals
-            - "end": Only bottom petals
-            - None: Full flower shape (default)
-
-    Returns:
-        svg.Polygon: SVG polygon element representing the flower-shaped pad
-
-    """
-    #width = (pitch - radius) / 2 - separation
-    width = pitch/2 - separation/4
-    points = []
-    if edge_type == "start" or edge_type is None:
-        points += [x - width, y,
-                   x - width, y+width,
-                   x-separation/2, y,
-                   x, y,
-                   x, y + width,
-                   x + width, y+width,
-                   x, y + separation/2
-                ]
-
-    if edge_type == "end" or edge_type is None:
-        points += [x, y,
-                    x, y - width,
-                    x - width, y-width,
-                    x, y-separation/2,
-                    x, y, # maybe remove this? or modify to radius
-                    x + width, y,
-                    x + width, y-width,
-                    x + separation/2, y,
-                    x, y
-                  ]
-
-
-    return svg.Polygon(
-        points=points,
-        stroke="black",
-        fill="black",
-        stroke_width=radius)
 
 def get_edge_type(i, count):
     """
@@ -189,9 +149,9 @@ def draw() -> svg.SVG:
         viewBox="0 0 200 250",
         elements=[
             # create_flower_pad(x=10, y=10, pitch=4, radius=.2, separation=.25, edge_type=None),
-             grid(create_pad, x_count=4, y_count=4, pitch=4, radius=.2, separation=.25, trace_width=.25),
+            # grid(create_pad, x_count=4, y_count=4, pitch=4, radius=.2, separation=.25, trace_width=.25),
             #row(create_flower_pad, count=4, pitch=4, radius=.2, separation=.25, trace_width=.25),
-            # grid(create_flower_pad, x_count=4, y_count=4, pitch=10, radius=0, separation=.05, trace_width=0.05),
+            grid(create_flower_pad, x_count=4, y_count=4, pitch=4, radius=.1, separation=.25, trace_width=0),
 
 
         ],
