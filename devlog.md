@@ -5,9 +5,18 @@
 # Dev Logs
 
 ## 2025-06-07
+### Start
 Right now I'm working on adding the final touches to the flower petals pad type by connecting the
 rows to each other. I'm not using just a vertical line since the petals are rotated. I think it
 will be easier/cleaner to just add a small diagonal line connecting each pad to the next.
+
+TODO:
+- I also want to clean up how the center of the flower is made (and the spacing for that)
+- Connect pads together
+- Maybe also generate the traces for connecting the pads on the back side? Then adding vias would
+   be easy since they could snap to place.
+
+### Also started using the black formatter
 
 ## 2025-06-07 Project Intro
 I'm designing a capacitive touch key cap for use as a keyboard using a messagease like input, but
