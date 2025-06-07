@@ -2,9 +2,10 @@
 Generate SVG files for capacitive touch pad layouts.
 
 This script creates SVG files containing capacitive touch pad layouts with:
-- Diamond-shaped pads arranged in rows and columns
+- Diamond-shaped or flower-shaped pads arranged in rows and columns
 - Connecting traces between pads
 - Configurable pad spacing, size and corner radius
+- Multiple pad styles including diamond and flower shapes
 
 Usage:
     python3 generate_svg_capacitive_touch.py
@@ -13,7 +14,7 @@ Usage:
 import svg
 from math import sqrt
 
-def create_pad(x, y, pitch, radius, separation, edge_type=None):
+def create_pad(x, y, pitch, radius, separation, trace_width, edge_type=None):
     """
     Creates an SVG polygon representing a capacitive touch pad.
 
@@ -23,13 +24,14 @@ def create_pad(x, y, pitch, radius, separation, edge_type=None):
         pitch (float): Distance between pad centers
         radius (float): Corner radius and stroke width of the pad
         separation (float): Minimum spacing between adjacent pads
+        trace_width (float): Width of connecting traces between pads
         edge_type (str, optional): Type of pad edge shape:
             - "start": Triangle pointing upward
             - "end": Triangle pointing downward
             - None: Diamond shape (default)
 
     Returns:
-        svg.Polygon: SVG polygon element representing the pad
+        svg.G: SVG group containing the pad polygon and optional connecting trace
     """
     width = (pitch - radius) / 2 - separation
     if edge_type == "start":
@@ -38,14 +40,38 @@ def create_pad(x, y, pitch, radius, separation, edge_type=None):
         points = [ x-width, y, x+width, y, x, y-width]
     else:
         points = [ x-width, y, x, y+width, x+width, y, x, y-width]
-    return svg.Polygon(
+    pad = svg.Polygon(
         points=points,
         stroke="black",
         fill="black",
         stroke_width=radius)
+    if edge_type != "end" and trace_width > 0:
+        connector_line = svg.Line(x1=x, y1=y+pitch/2-separation - radius, x2=x, y2=y+pitch/2+ separation + radius, stroke="red", stroke_width=trace_width/3)
+    else:
+        connector_line = None
+    return svg.G(elements=[pad, connector_line])
 
 
-def create_flower_pad(x, y, pitch, radius, separation, edge_type=None):
+def create_flower_pad(x, y, pitch, radius, separation, trace_width, edge_type=None):
+    """
+    Creates an SVG group representing a flower-shaped capacitive touch pad.
+
+    Args:
+        x (float): X coordinate of the pad center
+        y (float): Y coordinate of the pad center
+        pitch (float): Distance between pad centers
+        radius (float): Corner radius and stroke width of the pad petals
+        separation (float): Minimum spacing between adjacent pads
+        trace_width (float): Width of connecting traces between pads
+        edge_type (str, optional): Type of pad edge shape:
+            - "start": Two petals pointing upward
+            - "end": Two petals pointing downward
+            - None: Four petals in a flower shape (default)
+
+    Returns:
+        svg.G: SVG group containing the flower pad elements (petals, stems, center)
+               and optional connecting trace
+    """
     width = (pitch)/2 - radius
     diag = (radius + separation/2) * sqrt(2)
     points = [x + radius, y + radius + diag,
@@ -71,10 +97,14 @@ def create_flower_pad(x, y, pitch, radius, separation, edge_type=None):
     # petal
     elements += [svg.Polygon(**parameters, transform=[svg.Rotate(rot, x, y)]) for rot in rotations]
     # stem of petal
-    tw = radius
+    tw = trace_width
     elements += [svg.Line(x1=x+tw/2, y1=y, x2=x+tw/2, y2=y+pitch/4, stroke="black", stroke_width=tw,transform=[svg.Rotate(rot, x, y)]) for rot in rotations]
     # center of pad
     elements += [svg.Rect(x=x-tw, y=y-tw, width=tw*2, height=tw*2, fill="black", transform=[svg.Rotate(rot, x, y)]) for rot in rotations]
+
+    if edge_type != "end" and trace_width > 0:
+        elements += [svg.Line(x1=x+radius, y1=y+width-separation, x2=x-radius, y2=y+pitch/2+ separation + radius, stroke="black", stroke_width=trace_width/3)]
+
     return svg.G(elements=elements)
 
 
@@ -107,16 +137,9 @@ def row(pad_function, count, pitch, radius, separation, trace_width):
             - A vertical trace line connecting all pads
     """
     elements = [
-            pad_function(pitch, i*pitch, pitch, radius, separation, edge_type=get_edge_type(i, count))
+            pad_function(pitch, i*pitch, pitch, radius, separation, trace_width, edge_type=get_edge_type(i, count))
             for i in range(count)
         ]
-    if trace_width > 0:
-        elements.append(svg.Line(
-            x1=pitch, x2=pitch,
-            y1=0, y2=pitch * (count-1),
-            stroke="black",
-            stroke_width=trace_width,
-        ))
     return svg.G(elements=elements)
 
 
@@ -151,7 +174,7 @@ def draw() -> svg.SVG:
             # create_flower_pad(x=10, y=10, pitch=4, radius=.2, separation=.25, edge_type=None),
             # grid(create_pad, x_count=4, y_count=4, pitch=4, radius=.2, separation=.25, trace_width=.25),
             #row(create_flower_pad, count=4, pitch=4, radius=.2, separation=.25, trace_width=.25),
-            grid(create_flower_pad, x_count=4, y_count=4, pitch=4, radius=.1, separation=.25, trace_width=0),
+            grid(create_flower_pad, x_count=4, y_count=4, pitch=4, radius=.1, separation=.25, trace_width=0.25),
 
 
         ],
