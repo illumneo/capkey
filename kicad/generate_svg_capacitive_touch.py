@@ -14,6 +14,7 @@ Usage:
 
 import svg
 from math import sqrt
+from svg import mm
 
 
 class Pad:
@@ -34,7 +35,7 @@ class Pad:
         self.separation = separation
         self.trace_width = trace_width
 
-    def generate(self, x, y, connection_type, edge_type):
+    def generate(self, x, y, connection_type, edge_type) -> svg.G:
         raise NotImplementedError("Subclasses must implement this method")
 
 
@@ -42,7 +43,10 @@ class DiamondPad(Pad):
     def __init__(self, pitch, radius, separation, trace_width):
         super().__init__(pitch, radius, separation, trace_width)
 
-    def generate(self, x, y, connection_type, edge_type):
+    def __str__(self):
+        return f"DiamondPad(pitch={self.pitch}, radius={self.radius}, separation={self.separation}, trace_width={self.trace_width})"
+
+    def generate(self, x, y, connection_type, edge_type) -> svg.G:
         """
         Creates an SVG polygon representing a diamond-shaped capacitive touch pad.
 
@@ -61,7 +65,8 @@ class DiamondPad(Pad):
         Returns:
             svg.G: SVG group containing the pad polygon and optional connecting trace
         """
-        width = (self.pitch - self.radius) / 2 - self.separation
+        diag = (self.radius + self.separation / 2) * sqrt(2)
+        width = (self.pitch / 2) - diag
         if edge_type == "start":
             points = [x - width, y, x + width, y, x, y + width]
         elif edge_type == "end":
@@ -69,7 +74,7 @@ class DiamondPad(Pad):
         else:
             points = [x - width, y, x, y + width, x + width, y, x, y - width]
         diamond = svg.Polygon(
-            points=points, stroke="black", fill="black", stroke_width=self.radius
+            points=points, stroke="black", fill="black", stroke_width=self.radius*2
         )
         if edge_type != "end" and connection_type == "trace":
             connector_line = svg.Line(
@@ -78,7 +83,7 @@ class DiamondPad(Pad):
                 x2=x,
                 y2=y + self.pitch / 2 + self.separation + self.radius,
                 stroke="black",
-                stroke_width=self.trace_width / 3,
+                stroke_width=self.trace_width,
             )
         else:
             connector_line = None
@@ -89,7 +94,10 @@ class FlowerPad(Pad):
     def __init__(self, pitch, radius, separation, trace_width):
         super().__init__(pitch, radius, separation, trace_width)
 
-    def generate(self, x, y, connection_type, edge_type):
+    def __str__(self):
+        return f"FlowerPad(pitch={self.pitch}, radius={self.radius}, separation={self.separation}, trace_width={self.trace_width})"
+
+    def generate(self, x, y, connection_type, edge_type) -> svg.G:
         """
         Creates an SVG group representing a flower-shaped capacitive touch pad.
 
@@ -175,11 +183,11 @@ class TouchGrid:
         self.x_count = x_count
         self.y_count = y_count
 
-    def generate(self) -> svg.G:
-        columns = [self._row(connection_type="trace") for i in range(self.x_count)]
+    def generate(self) -> svg.SVG:
+        columns = [self._row(self.y_count, connection_type="trace") for i in range(self.x_count)]
         for i, e in enumerate(columns):
             e.transform = [svg.Translate(i * self.pad.pitch, 0)]
-        rows = [self._row(connection_type="via") for i in range(self.y_count)]
+        rows = [self._row(self.x_count, connection_type="via") for i in range(self.y_count)]
         for i, e in enumerate(rows):
             e.transform = [
                 svg.Rotate(-90, 0, 0),
@@ -208,7 +216,7 @@ class TouchGrid:
         else:
             return "center"
 
-    def _row(self, connection_type: str) -> svg.G:
+    def _row(self, count: int, connection_type: str) -> svg.G:
         """
         Creates an SVG element containing a row of connected capacitive touch pads.
 
@@ -220,7 +228,7 @@ class TouchGrid:
             svg.G: SVG group element containing:
                 - A row of pads with appropriate edge and connection types
         """
-        count = self.x_count + 1  # +1 since edge pads are ~1/2 pitch
+        count += 1  # +1 since edge pads are ~1/2 pitch
         elements = [
             self.pad.generate(
                 self.pad.pitch,
@@ -233,6 +241,120 @@ class TouchGrid:
         return svg.G(elements=elements)
 
 
+class FlowerTouchPad(TouchGrid):
+    def __init__(
+        self,
+        pitch: float,
+        radius: float,
+        separation: float,
+        trace_width: float,
+        x_count: int,
+        y_count: int,
+    ):
+        super().__init__(
+            FlowerPad(
+                pitch=pitch,
+                radius=radius,
+                separation=separation,
+                trace_width=trace_width,
+            ),
+            x_count,
+            y_count,
+        )
+
+
+class DiamondTouchPad(TouchGrid):
+    def __init__(
+        self,
+        pitch: float,
+        radius: float,
+        separation: float,
+        trace_width: float,
+        x_count: int,
+        y_count: int,
+    ):
+        super().__init__(
+            DiamondPad(
+                pitch=pitch,
+                radius=radius,
+                separation=separation,
+                trace_width=trace_width,
+            ),
+            x_count,
+            y_count,
+        )
+
+
+def demo_place(touch_pad: TouchGrid, x: float, y: float) -> svg.G:
+    title = svg.Text(
+        x=mm(x),
+        y=mm(y + 2),
+        text=f"{touch_pad.__class__.__name__} ({touch_pad.x_count}x{touch_pad.y_count}):",
+        font_size=6,
+        fill="red",
+        text_anchor="start",
+    )
+    pad_text = svg.Text(
+        x=mm(x),
+        y=mm(y+ 3),
+        text=f"{touch_pad.pad}",
+        font_size=3,
+        fill="red",
+        text_anchor="start",
+    )
+    grid = touch_pad.generate()
+    grid.x = mm(x)
+    grid.y = mm(y + 3.5)
+    return svg.G(elements=[grid, title, pad_text])
+
+
+def demo_pads():
+    flower_min = FlowerTouchPad(
+        pitch=4,
+        radius=0.1,
+        separation=0.5,
+        trace_width=0.25,
+        x_count=4,
+        y_count=4,
+    )
+    diamond_min = DiamondTouchPad(
+        pitch=4,
+        radius=0.1,
+        separation=0.25,
+        trace_width=0.25,
+        x_count=3,
+        y_count=4,
+    )
+
+    flower_other = FlowerTouchPad(
+        pitch=5,
+        radius=0.1,
+        separation=0.25,
+        trace_width=0.25,
+        x_count=10,
+        y_count=2,
+    )
+    diamond_max = DiamondTouchPad(
+        pitch=10,
+        radius=1,
+        separation=.25,
+        trace_width=0.25,
+        x_count=4,
+        y_count=4,
+    )
+    return svg.SVG(
+        width="300mm",
+        height="250mm",
+        viewBox="0 0 300 250",
+        elements=[
+            demo_place(diamond_min, 0, 0),
+            demo_place(flower_min, 0, 22),
+            demo_place(flower_other, 0, 44),
+            demo_place(diamond_max, 30, 0),
+        ],
+    )
+
+
 def draw() -> svg.SVG:
 
     pad = FlowerPad(
@@ -243,31 +365,9 @@ def draw() -> svg.SVG:
     )
     return TouchGrid(pad, x_count=4, y_count=4).generate()
 
-    # return svg.SVG(
-    #     width="200mm",
-    #     height="250mm",
-    #     viewBox="0 0 200 250",
-    #     elements=[
-    #         # create_flower_pad(x=10, y=10, pitch=4, radius=.2, separation=.25, edge_type="center"),
-    #         # grid(create_diamond_pad, x_count=4, y_count=4, pitch=4, radius=.2, separation=.25, trace_width=.25),
-    #         # row(create_flower_pad, count=4, pitch=4, radius=.2, separation=.25, trace_width=.25),
-    #         # grid(
-    #         #     create_flower_pad,
-    #         #     x_count=4,
-    #         #     y_count=4,
-    #         #     pitch=4,
-    #         #     radius=0.1,
-    #         #     separation=0.25,
-    #         #     trace_width=0.25,
-    #         # ),
-    #         # grid(pad, x_count=4, y_count=4),
-    #         TouchGrid(pad, x_count=4, y_count=4).generate(),
-    #     ],
-    # )
-
 
 canvas = draw()
 
 if __name__ == "__main__":
     with open("touch_pads.svg", "w") as f:
-        f.write(str(draw()))
+        f.write(str(demo_pads()))

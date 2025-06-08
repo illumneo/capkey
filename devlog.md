@@ -1,12 +1,14 @@
 
 # Intro
 
-
+<img src="./docs/demo.svg">
 # Dev Logs
 
 
 ## 2025-06-08
-Started working on refactoring the touchpad python generation code to be more readable.
+Started working on refactoring the touchpad python generation code to be more readable. Also added
+a demo function that generates a few different shapes (though they don't all render properly in the
+browser).
 
 ## 2025-06-07
 ### Start
