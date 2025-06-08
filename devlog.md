@@ -4,6 +4,10 @@
 
 # Dev Logs
 
+
+## 2025-06-08
+Started working on refactoring the touchpad python generation code to be more readable.
+
 ## 2025-06-07
 ### Start
 Right now I'm working on adding the final touches to the flower petals pad type by connecting the
