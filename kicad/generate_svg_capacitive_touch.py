@@ -5,11 +5,16 @@ This script creates SVG files containing capacitive touch pad layouts with:
 - Diamond-shaped or flower-shaped pads arranged in rows and columns
 - Connecting traces between pads
 - Configurable pad spacing, size and corner radius
-- Multiple pad styles including diamond and flower shapes
 
 Usage:
     python3 generate_svg_capacitive_touch.py
     xdg-open touch_pads.svg
+
+Example:
+    >>> pad = DiamondTouchPad(pitch=4, radius=0.1, separation=0.25, trace_width=0.25, x_count=3, y_count=4)
+    >>> svg_content = pad.generate()
+    >>> with open("touch_pads.svg", "w") as f:
+    ...     f.write(str(svg_content))
 """
 
 import svg
@@ -19,51 +24,110 @@ from svg import mm
 
 class Pad:
     """
-    A class representing a capacitive touch pad with configurable parameters.
+    A base class representing a capacitive touch pad with configurable parameters.
 
-    Args:
-        pad_function (Callable): Function that generates the pad shape
-        pitch (float): Distance between pad centers
-        radius (float): Corner radius and stroke width of the pad
-        separation (float): Minimum spacing between adjacent pads
-        trace_width (float): Width of connecting traces between pads
+    This abstract base class defines the common interface and properties for all touch pad types.
+    Subclasses must implement the generate() method to create specific pad shapes.
+
+    Attributes:
+        pitch (float): Distance between pad centers in millimeters
+        radius (float): Corner radius and stroke width of the pad in millimeters
+        separation (float): Minimum spacing between adjacent pads in millimeters
+        trace_width (float): Width of connecting traces between pads in millimeters
     """
 
-    def __init__(self, pitch, radius, separation, trace_width):
+    def __init__(
+        self, pitch: float, radius: float, separation: float, trace_width: float
+    ) -> None:
+        """
+        Initialize a new Pad instance.
+
+        Args:
+            pitch: Distance between pad centers in millimeters
+            radius: Corner radius and stroke width of the pad in millimeters
+            separation: Minimum spacing between adjacent pads in millimeters
+            trace_width: Width of connecting traces between pads in millimeters
+        """
         self.pitch = pitch
         self.radius = radius
         self.separation = separation
         self.trace_width = trace_width
 
-    def generate(self, x, y, connection_type, edge_type) -> svg.G:
+    def generate(
+        self, x: float, y: float, connection_type: str, edge_type: str
+    ) -> svg.G:
+        """
+        Generate an SVG representation of the pad.
+
+        Args:
+            x: X coordinate of the pad center in millimeters
+            y: Y coordinate of the pad center in millimeters
+            connection_type: Type of connection ("via" or "trace")
+            edge_type: Type of pad edge shape ("start", "end", or "center")
+
+        Returns:
+            An SVG group element containing the pad and its connections
+
+        Raises:
+            NotImplementedError: This method must be implemented by subclasses
+        """
         raise NotImplementedError("Subclasses must implement this method")
 
 
 class DiamondPad(Pad):
-    def __init__(self, pitch, radius, separation, trace_width):
+    """
+    A class representing a diamond-shaped capacitive touch pad.
+
+    This class creates diamond-shaped touch pads with configurable dimensions and connections.
+    The diamond shape can be modified at the edges to create triangular shapes for the start
+    and end of rows to make a straighter edge.
+
+    Attributes:
+        Inherits all attributes from the Pad base class.
+    """
+
+    def __init__(
+        self, pitch: float, radius: float, separation: float, trace_width: float
+    ) -> None:
+        """
+        Initialize a new DiamondPad instance.
+
+        Args:
+            pitch: Distance between pad centers in millimeters
+            radius: Corner radius and stroke width of the pad in millimeters
+            separation: Minimum spacing between adjacent pads in millimeters
+            trace_width: Width of connecting traces between pads in millimeters
+        """
         super().__init__(pitch, radius, separation, trace_width)
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """
+        Return a string representation of the DiamondPad configuration.
+
+        Returns:
+            A string containing the pad's configuration parameters
+        """
         return f"DiamondPad(pitch={self.pitch}, radius={self.radius}, separation={self.separation}, trace_width={self.trace_width})"
 
-    def generate(self, x, y, connection_type, edge_type) -> svg.G:
+    def generate(
+        self, x: float, y: float, connection_type: str, edge_type: str
+    ) -> svg.G:
         """
         Creates an SVG polygon representing a diamond-shaped capacitive touch pad.
 
         Args:
-            pad (Pad): Pad configuration object containing pad parameters
-            x (float): X coordinate of the pad center
-            y (float): Y coordinate of the pad center
-            connection_type (str): Type of connection:
-                - "via": Connect via
+            x: X coordinate of the pad center in millimeters
+            y: Y coordinate of the pad center in millimeters
+            connection_type: Type of connection:
+                - "via": Don't connect, that will be handled by a via
                 - "trace": Connect with a trace
-            edge_type (str): Type of pad edge shape:
+            edge_type: Type of pad edge shape:
                 - "start": Triangle pointing upward
                 - "end": Triangle pointing downward
                 - "center": Diamond shape
 
         Returns:
-            svg.G: SVG group containing the pad polygon and optional connecting trace
+            An SVG group containing the pad polygon and optional connecting trace
         """
         diag = (self.radius + self.separation / 2) * sqrt(2)
         width = (self.pitch / 2) - diag
@@ -74,7 +138,7 @@ class DiamondPad(Pad):
         else:
             points = [x - width, y, x, y + width, x + width, y, x, y - width]
         diamond = svg.Polygon(
-            points=points, stroke="black", fill="black", stroke_width=self.radius*2
+            points=points, stroke="black", fill="black", stroke_width=self.radius * 2
         )
         if edge_type != "end" and connection_type == "trace":
             connector_line = svg.Line(
@@ -91,31 +155,60 @@ class DiamondPad(Pad):
 
 
 class FlowerPad(Pad):
-    def __init__(self, pitch, radius, separation, trace_width):
+    """
+    A class representing a flower-shaped capacitive touch pad.
+
+    This class creates flower-shaped touch pads with configurable dimensions.
+    The flower shape can be modified at the edges to create different petal arrangements
+    for the start and end of rows to make a straighter edge.
+
+    Attributes:
+        Inherits all attributes from the Pad base class.
+    """
+
+    def __init__(
+        self, pitch: float, radius: float, separation: float, trace_width: float
+    ) -> None:
+        """
+        Initialize a new FlowerPad instance.
+
+        Args:
+            pitch: Distance between pad centers in millimeters
+            radius: Corner radius and stroke width of the pad in millimeters
+            separation: Minimum spacing between adjacent pads in millimeters
+            trace_width: Width of connecting traces between pads in millimeters
+        """
         super().__init__(pitch, radius, separation, trace_width)
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """
+        Return a string representation of the FlowerPad configuration.
+
+        Returns:
+            A string containing the pad's configuration parameters
+        """
         return f"FlowerPad(pitch={self.pitch}, radius={self.radius}, separation={self.separation}, trace_width={self.trace_width})"
 
-    def generate(self, x, y, connection_type, edge_type) -> svg.G:
+    def generate(
+        self, x: float, y: float, connection_type: str, edge_type: str
+    ) -> svg.G:
         """
         Creates an SVG group representing a flower-shaped capacitive touch pad.
 
         Args:
-            pad (Pad): Pad configuration object containing pad parameters
-            x (float): X coordinate of the pad center
-            y (float): Y coordinate of the pad center
-            connection_type (str): Type of connection:
+            x: X coordinate of the pad center in millimeters
+            y: Y coordinate of the pad center in millimeters
+            connection_type: Type of connection:
                 - "via": Connect via
                 - "trace": Connect with a trace
-            edge_type (str): Type of pad edge shape:
+            edge_type: Type of pad edge shape:
                 - "start": Two petals pointing upward
                 - "end": Two petals pointing downward
                 - "center": Four petals in a flower shape
 
         Returns:
-            svg.G: SVG group containing the flower pad elements (petals, stems, center)
-                and optional connecting trace
+            An SVG group containing the flower pad elements (petals, stems, center)
+            and optional connecting trace
         """
         width = (self.pitch) / 2 - self.radius
         diag = (self.radius + self.separation / 2) * sqrt(2)
@@ -178,16 +271,47 @@ class FlowerPad(Pad):
 
 
 class TouchGrid:
-    def __init__(self, pad: Pad, x_count: int, y_count: int):
+    """
+    A class representing a grid of capacitive touch pads.
+
+    This class manages the layout and generation of a grid of touch pads, handling
+    the arrangement of pads in rows and columns with appropriate connections.
+
+    Attributes:
+        pad (Pad): The pad configuration to use for the grid
+        x_count (int): Number of columns in the grid
+        y_count (int): Number of rows in the grid
+    """
+
+    def __init__(self, pad: Pad, x_count: int, y_count: int) -> None:
+        """
+        Initialize a new TouchGrid instance.
+
+        Args:
+            pad: The pad configuration to use for the grid
+            x_count: Number of columns in the grid
+            y_count: Number of rows in the grid
+        """
         self.pad = pad
         self.x_count = x_count
         self.y_count = y_count
 
     def generate(self) -> svg.SVG:
-        columns = [self._row(self.y_count, connection_type="trace") for i in range(self.x_count)]
+        """
+        Generate an SVG representation of the touch pad grid.
+
+        Returns:
+            An SVG document containing the complete touch pad grid layout
+        """
+        columns = [
+            self._row(self.y_count, connection_type="trace")
+            for i in range(self.x_count)
+        ]
         for i, e in enumerate(columns):
             e.transform = [svg.Translate(i * self.pad.pitch, 0)]
-        rows = [self._row(self.x_count, connection_type="via") for i in range(self.y_count)]
+        rows = [
+            self._row(self.x_count, connection_type="via") for i in range(self.y_count)
+        ]
         for i, e in enumerate(rows):
             e.transform = [
                 svg.Rotate(-90, 0, 0),
@@ -205,9 +329,16 @@ class TouchGrid:
             elements=columns + rows,
         )
 
-    def _get_edge_type(self, i, count):
+    def _get_edge_type(self, i: int, count: int) -> str:
         """
-        Determines the edge type for a pad based on its position in a row.
+        Determine the edge type for a pad based on its position in a row.
+
+        Args:
+            i: Index of the pad in the row
+            count: Total number of pads in the row
+
+        Returns:
+            The edge type: "start", "end", or "center"
         """
         if i == 0:
             return "start"
@@ -218,15 +349,15 @@ class TouchGrid:
 
     def _row(self, count: int, connection_type: str) -> svg.G:
         """
-        Creates an SVG element containing a row of connected capacitive touch pads.
+        Create an SVG element containing a row of connected capacitive touch pads.
 
         Args:
-            pad (Pad): Pad configuration object containing pad parameters
-            count (int): Number of pads in the row
+            count: Number of pads in the row
+            connection_type: Type of connection between pads ("via" or "trace")
 
         Returns:
-            svg.G: SVG group element containing:
-                - A row of pads with appropriate edge and connection types
+            An SVG group element containing the row of pads with appropriate
+            edge and connection types
         """
         count += 1  # +1 since edge pads are ~1/2 pitch
         elements = [
@@ -242,6 +373,10 @@ class TouchGrid:
 
 
 class FlowerTouchPad(TouchGrid):
+    """
+    A specialized TouchGrid that uses FlowerPad for its touch pads.
+    """
+
     def __init__(
         self,
         pitch: float,
@@ -250,7 +385,18 @@ class FlowerTouchPad(TouchGrid):
         trace_width: float,
         x_count: int,
         y_count: int,
-    ):
+    ) -> None:
+        """
+        Initialize a new FlowerTouchPad instance.
+
+        Args:
+            pitch: Distance between pad centers in millimeters
+            radius: Corner radius and stroke width of the pad in millimeters
+            separation: Minimum spacing between adjacent pads in millimeters
+            trace_width: Width of connecting traces between pads in millimeters
+            x_count: Number of columns in the grid
+            y_count: Number of rows in the grid
+        """
         super().__init__(
             FlowerPad(
                 pitch=pitch,
@@ -264,6 +410,10 @@ class FlowerTouchPad(TouchGrid):
 
 
 class DiamondTouchPad(TouchGrid):
+    """
+    A specialized TouchGrid that uses DiamondPad for its touch pads.
+    """
+
     def __init__(
         self,
         pitch: float,
@@ -272,7 +422,18 @@ class DiamondTouchPad(TouchGrid):
         trace_width: float,
         x_count: int,
         y_count: int,
-    ):
+    ) -> None:
+        """
+        Initialize a new DiamondTouchPad instance.
+
+        Args:
+            pitch: Distance between pad centers in millimeters
+            radius: Corner radius and stroke width of the pad in millimeters
+            separation: Minimum spacing between adjacent pads in millimeters
+            trace_width: Width of connecting traces between pads in millimeters
+            x_count: Number of columns in the grid
+            y_count: Number of rows in the grid
+        """
         super().__init__(
             DiamondPad(
                 pitch=pitch,
@@ -286,6 +447,17 @@ class DiamondTouchPad(TouchGrid):
 
 
 def demo_place(touch_pad: TouchGrid, x: float, y: float) -> svg.G:
+    """
+    Create a demo placement of a touch pad grid with title and configuration text.
+
+    Args:
+        touch_pad: The touch pad grid to display
+        x: X coordinate for placement in millimeters
+        y: Y coordinate for placement in millimeters
+
+    Returns:
+        An SVG group containing the touch pad grid, title, and configuration text
+    """
     title = svg.Text(
         x=mm(x),
         y=mm(y + 2),
@@ -296,7 +468,7 @@ def demo_place(touch_pad: TouchGrid, x: float, y: float) -> svg.G:
     )
     pad_text = svg.Text(
         x=mm(x),
-        y=mm(y+ 3),
+        y=mm(y + 3),
         text=f"{touch_pad.pad}",
         font_size=3,
         fill="red",
@@ -308,7 +480,20 @@ def demo_place(touch_pad: TouchGrid, x: float, y: float) -> svg.G:
     return svg.G(elements=[grid, title, pad_text])
 
 
-def demo_pads():
+def demo_pads() -> svg.SVG:
+    """
+    Create a demo SVG showing various touch pad configurations.
+
+    This function creates a demonstration SVG containing multiple touch pad grids
+    with different configurations, including:
+    - A small flower pad grid (4x4)
+    - A small diamond pad grid (3x4)
+    - A wide flower pad grid (10x2)
+    - A large diamond pad grid (4x4)
+
+    Returns:
+        An SVG document containing all demo touch pad grids
+    """
     flower_min = FlowerTouchPad(
         pitch=4,
         radius=0.1,
@@ -337,7 +522,7 @@ def demo_pads():
     diamond_max = DiamondTouchPad(
         pitch=10,
         radius=1,
-        separation=.25,
+        separation=0.25,
         trace_width=0.25,
         x_count=4,
         y_count=4,
@@ -354,19 +539,6 @@ def demo_pads():
         ],
     )
 
-
-def draw() -> svg.SVG:
-
-    pad = FlowerPad(
-        pitch=4,
-        radius=0.1,
-        separation=0.25,
-        trace_width=0.25,
-    )
-    return TouchGrid(pad, x_count=4, y_count=4).generate()
-
-
-canvas = draw()
 
 if __name__ == "__main__":
     with open("touch_pads.svg", "w") as f:
