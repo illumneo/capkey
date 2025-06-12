@@ -21,6 +21,9 @@ import svg
 from math import sqrt
 from svg import mm
 
+# origin circle to help with alignment in kicad
+origin = svg.Circle(cx=0, cy=0, r=0.1, stroke="black", stroke_width=0.1, fill="none")
+
 
 class Pad:
     """
@@ -153,6 +156,34 @@ class DiamondPad(Pad):
             connector_line = None
         return svg.G(elements=[diamond, connector_line])
 
+    def generate_back_traces(
+        self, x: float, y: float, via_diameter: float = 0
+    ) -> svg.G:
+        """
+        Creates an SVG group containing just the trace that will connect vias
+        on the back side of the board.
+
+        Args:
+            x: X coordinate of the pad center in millimeters
+            y: Y coordinate of the pad center in millimeters
+            via_diameter: Diameter of the via in millimeters, defaults to 2x radius of the pad.
+
+        Returns:
+            An SVG group containing the connecting trace
+        """
+        offset = min(self.radius, via_diameter / 2)
+        elements = [
+            svg.Line(
+                x1=x,
+                y1=y + self.pitch / 2 - self.separation - offset,
+                x2=x,
+                y2=y + self.pitch / 2 + self.separation + offset,
+                stroke="black",
+                stroke_width=self.trace_width,
+            )
+        ]
+        return svg.G(elements=elements)
+
 
 class FlowerPad(Pad):
     """
@@ -263,10 +294,38 @@ class FlowerPad(Pad):
                     x2=x - self.radius,
                     y2=y + self.pitch / 2 + self.separation + self.radius,
                     stroke="black",
-                    stroke_width=self.trace_width / 3,
+                    stroke_width=self.trace_width,
                 )
             ]
 
+        return svg.G(elements=elements)
+
+    def generate_back_traces(
+        self, x: float, y: float, via_diameter: float = 0
+    ) -> svg.G:
+        """
+        Creates an SVG group with just the trace to connect vias on the back side of the board.
+
+        Args:
+            x: X coordinate of the pad center in millimeters
+            y: Y coordinate of the pad center in millimeters
+            via_diameter: Diameter of the via in millimeters, defaults to 2x radius of the pad.
+
+        Returns:
+            An SVG group containing the connecting trace
+        """
+        width = (self.pitch) / 2 - via_diameter / 2
+        offset = min(self.radius, via_diameter / 2)
+        elements = [
+            svg.Line(
+                x1=x + offset,
+                y1=y + width - self.separation,
+                x2=x - offset,
+                y2=y + self.pitch / 2 + self.separation + offset,
+                stroke="black",
+                stroke_width=self.trace_width,
+            )
+        ]
         return svg.G(elements=elements)
 
 
@@ -326,7 +385,44 @@ class TouchGrid:
             width=str(width) + "mm",
             height=str(height) + "mm",
             viewBox=f"0 0 {width} {height}",
-            elements=columns + rows,
+            elements=[origin] + columns + rows,
+        )
+
+    def generate_back_traces(self, via_diameter: float = 0) -> svg.SVG:
+        """
+        Generate an SVG representation of just the back traces, which will be
+        connected to the pads on the front side using vias.
+
+        Args:
+            via_diameter: Diameter of the vias in millimeters, defaults to 2x radius of the pad.
+
+        Returns:
+            An SVG document containing just the back traces that will connect the vias
+        """
+        elements = []
+        for i in range(self.x_count):
+            for j in range(self.y_count):
+                trace = self.pad.generate_back_traces(
+                    self.pad.pitch,
+                    0,
+                    via_diameter=via_diameter,
+                )
+                trace.transform = [
+                    svg.Rotate(-90, 0, 0),
+                    svg.Translate(
+                        -(i + 1) * self.pad.pitch - self.pad.pitch / 2,
+                        self.pad.pitch / 2 + j * self.pad.pitch,
+                    ),
+                ]
+                elements += [trace]
+
+        width = self.pad.pitch * (self.x_count + 1)
+        height = self.pad.pitch * (self.y_count + 1)
+        return svg.SVG(
+            width=str(width) + "mm",
+            height=str(height) + "mm",
+            viewBox=f"0 0 {width} {height}",
+            elements=elements + [origin],
         )
 
     def _get_edge_type(self, i: int, count: int) -> str:
@@ -540,6 +636,28 @@ def demo_pads() -> svg.SVG:
     )
 
 
+def pcb():
+    flower4x4 = FlowerTouchPad(
+        pitch=18 / 4,
+        radius=0.15,
+        separation=0.2,
+        trace_width=0.16,
+        x_count=4,
+        y_count=4,
+    )
+
+    return svg.SVG(
+        width="18mm",
+        height="18mm",
+        viewBox="0 0 18 18",
+        elements=[
+            # flower4x4.generate(),
+            flower4x4.generate_back_traces(via_diameter=1)
+        ],
+    )
+
+
 if __name__ == "__main__":
     with open("touch_pads.svg", "w") as f:
         f.write(str(demo_pads()))
+        # f.write(str(pcb()))

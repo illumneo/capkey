@@ -5,6 +5,28 @@
 # Dev Logs
 
 
+## 2025-06-11
+I added a method for generating the traces on the back of the board. This will be helpful to align
+all of the vias correctly since they can then 'snap' to the trace line ends. I also added an
+'origin' circle to the generated svg files so that they can more easily be lined up in kicad since
+kicad does not seem to respect transformations fully.
+
+Next steps will be to generate a single kicad footprint, then use it to make a board.
+
+## 2025-06-09
+It's almost time to start ordering HW. I was originally planning on ordering a board with a few
+different pad layouts from jlcpcb, but then realized that since my plan is to make a small board,
+OSH Park is actually very competetive, has quicker shipping, and ENIG by default! To get 3 copies of
+the 18x18mm board would be about $2.50. They don't list their capablities quite as clearly as
+jlcpcb, but here is I think the important info:
+- 6 mil (0.1524mm) trace width/spacing
+- 10 mil (0.254mm) min drill size
+- 5 mil (0.127mm) anular ring size (given as radius?)
+  - So total via diameter = 20 mil (0.508mm)
+
+Looking at the Pi Pico datasheet, their footprint pads extend ~.8mm beyond the module, so I think I
+will plan on making a board that is 18x20mm.
+
 ## 2025-06-08
 Started working on refactoring the touchpad python generation code to be more readable. Also added
 a demo function that generates a few different shapes (though they don't all render properly in the
