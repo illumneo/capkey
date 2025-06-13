@@ -4,6 +4,8 @@
 <img src="./docs/demo.svg">
 # Dev Logs
 
+## 2025-06-12
+Need to use "Edit Pad as Graphic Shape" in footprint to be able to generate it (more) correctly.
 
 ## 2025-06-11
 I added a method for generating the traces on the back of the board. This will be helpful to align

@@ -171,7 +171,7 @@ class DiamondPad(Pad):
         Returns:
             An SVG group containing the connecting trace
         """
-        offset = min(self.radius, via_diameter / 2)
+        offset = max(self.radius, via_diameter / 2)
         elements = [
             svg.Line(
                 x1=x,
@@ -314,14 +314,14 @@ class FlowerPad(Pad):
         Returns:
             An SVG group containing the connecting trace
         """
-        width = (self.pitch) / 2 - via_diameter / 2
-        offset = min(self.radius, via_diameter / 2)
+        width = (self.pitch) / 2 - self.radius
+        offset = max(0, via_diameter / 2 - self.radius)
         elements = [
             svg.Line(
-                x1=x + offset,
-                y1=y + width - self.separation,
-                x2=x - offset,
-                y2=y + self.pitch / 2 + self.separation + offset,
+                x1=x + self.radius + offset,
+                y1=y + width - self.separation - offset,
+                x2=x - self.radius - offset,
+                y2=y + self.pitch / 2 + self.separation + self.radius + offset,
                 stroke="black",
                 stroke_width=self.trace_width,
             )
@@ -652,12 +652,12 @@ def pcb():
         viewBox="0 0 18 18",
         elements=[
             # flower4x4.generate(),
-            flower4x4.generate_back_traces(via_diameter=1)
+            flower4x4.generate_back_traces(via_diameter=0.508)
         ],
     )
 
 
 if __name__ == "__main__":
     with open("touch_pads.svg", "w") as f:
-        f.write(str(demo_pads()))
-        # f.write(str(pcb()))
+        # f.write(str(demo_pads()))
+        f.write(str(pcb()))
