@@ -4,6 +4,38 @@
 <img src="./docs/demo.svg">
 # Dev Logs
 
+
+## 2025-07-01
+I wrote some rudimentary code that outputs the numbers 1-9 based on which position you click on. Now
+I need to decide how to capture gestures. I need to detect taps, swipes, long swipes, out and back
+movements, cw/ccw circles, and maybe holds? A gesture will start when a touch event is registered,
+I can then track it's movements to determine which type of move it is, and then convert that to some
+action. Gestures definitely start on a touch, but we can't always wait till a release since, for
+example, we might want to allow people to move the cursor around by sliding and we'd want to
+recognize and take action while they are still holding the button.
+
+For now though, I think I will start with just detecting gestures once released. I think I'll set it
+up where I'll have different 'zones' and I'll track which zones we enter to determine the gesture.
+There will be the center zone (used for taps without intenional movements), and then octants
+radiating out (so we can detect diagonal and 90 degree swipes). This will also allow us to
+potentially track circular moves by seeing that we go through all of the octants. Eventually I might
+see about adding another zone that is outside the normal octants to detect long moves.
+
+So the state machine would look something like this:
+- Wait till a touch event is triggered
+- Take note of its starting location (x, y) and maybe time?
+- Every tick check which zone it is in based off of it's starting location
+- If it is in a new zone, add it to the list (and maybe the time?)
+- Once the touch has been released, identify which gesture it was
+
+(This probably could be modified to check if a character should be output while a gesture is in
+motion)
+
+## 2025-06-29
+I got the PCB's in and now I'm going to see about writing some code to calculate finger position.
+I'll start by just outputing the 8 touch values, and then I'll start to see about writing some code
+to calculate x and y position (and maybe 'Z' position to indicate how close the finger is?)
+
 ## 2025-06-12
 Need to use "Edit Pad as Graphic Shape" in footprint to be able to generate it (more) correctly.
 
