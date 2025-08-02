@@ -5,6 +5,31 @@
 # Dev Logs
 
 
+## 2025-08-01
+I got some of the basic gestures working and can now detect taps, or swipes in any of the 8
+directions. Next steps will be to add all of the characters and print the right one based on where
+the gesture started.
+
+One issue I ran into was that the X and Y axis aren't scaled properly. I believe this is because one
+of the axis has to go through the board and so maybe it is more/less sensitive to touch. I fixed that
+by slightly scaling the Y axis, but more work needs to go into that.
+
+
+## 2025-07-03
+For now I'll leave off the time component since it can always be added later.
+
+Should I also include distance? or min/max for x and y (to get a sense of scale?)
+
+Once a touch is registered, we'll add the center zone to the vector. Then we'll monitor the distance
+each time and see if it exceeds some constant. If so, then we check which direction we're going in
+and then we'll transition to that zone. Once we're in an 'arc' zone, we can transition into 4
+possible zones: back to center, cw, ccw, and 'out'. The logic is the same for all of them, I just
+need to shift the angle by some offset.
+
+Or, instead of trying to track all of the zones, do I just try and detect the gestures I actually
+want to track? it would be pretty easy to track taps, swipes, and swipe backs (i think). I just need
+to figure out how to track circles, but I can add that later.
+
 ## 2025-07-01
 I wrote some rudimentary code that outputs the numbers 1-9 based on which position you click on. Now
 I need to decide how to capture gestures. I need to detect taps, swipes, long swipes, out and back
