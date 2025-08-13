@@ -14,6 +14,10 @@ One issue I ran into was that the X and Y axis aren't scaled properly. I believe
 of the axis has to go through the board and so maybe it is more/less sensitive to touch. I fixed that
 by slightly scaling the Y axis, but more work needs to go into that.
 
+I think next I'm going to see how to make it more accurate. To do that, I'll add something to print
+out the values only when they are above some threshold, and then I can plot the data and see what it looks like. I also could see about using an IIR filter on X, Y, and Z to smooth out the response.
+And I think I might need to weight the edges higher (for Z at least) since they are less sensitive.
+
 
 ## 2025-07-03
 For now I'll leave off the time component since it can always be added later.

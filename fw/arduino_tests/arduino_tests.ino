@@ -5,6 +5,20 @@ int32_t offset[8];
 int32_t readings[8];
 float x, y, z;
 
+const char board[10][9] = {
+  //c    N    NW   W    SW   S    SE   E    NE
+  {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
+  {'a', '.', '.', '.', '.', '.', 'v', '\n', '.'},
+  {'n', '.', '.', '.', '.', 'l', '.', '.', '.'},
+  {'i', '.', '.', '.', 'x', '.', '.', '.', '.'},
+  {'h', '.', '.', '.', '.', '.', '.', 'k', '.'},
+  {'o', 'u', 'q', 'c', 'g', 'd', 'j', 'b', 'p'},
+  {'r', '.', '.', 'm', '.', '.', '.', '.', '.'},
+  {'t', '.', '.', '.', '.', '.', '.', ' ', 'y'},
+  {'e', 'w', '.', '.', '.', '.', '.', 'z', '.'},
+  {'s', '.', 'f', '.', '.', '.', '.', '.', '.'}
+};
+
 void readPads(int32_t readings[8]) {
   readings[0] = touchRead(1);
   readings[1] = touchRead(2);
@@ -40,6 +54,10 @@ void loop() {
 
   // printf("\n");
   // delay(50);
+
+  if (z > .5) {
+    printf("%ld, %f, %f, %f\n", micros(), x, y, z);
+  }
 }
 
 int getPosition(float x, float y, float z) {
@@ -115,22 +133,21 @@ void calculateGesture(float start_x, float start_y, float end_x, float end_y) {
   float angle = atan2(y, x) * 180.0 / M_PI + 180;
   float distance = sqrt(x*x + y*y);
   uint8_t gesture;
-  printf("%d, ", getPosition(start_x, start_y, 2));
+  // printf("%d, ", getPosition(start_x, start_y, 2));
   if (distance < .5) { // just a tap, no movement
-    printf("@@tap %f, %f\n", angle, distance);
+    // printf("@@tap %f, %f\n", angle, distance);
     gesture = 0;
   } else {
     gesture = (int) (angle + 22.5+45)/45;
     if (gesture == 9) {
       gesture = 1;
     }
-    printf("@@swipe %f, %f, d: %d\n", angle, distance, (int) (angle + 22.5)/45);
+    // printf("@@swipe %f, %f, d: %d\n", angle, distance, (int) (angle + 22.5)/45);
 
   }
 
-  char gesture_str[9] = {'o', 'u', 'q', 'c', 'g', 'd', 'j', 'b', 'p'};
-
-  printf("______%c______\n", gesture_str[gesture]);
+  // printf("%c, , , ,\n", board[getPosition(start_x, start_y, 2)][gesture]);
+  Serial.flush();
 }
 
 /*
