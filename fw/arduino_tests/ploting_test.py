@@ -216,6 +216,10 @@ class RealtimePlotter:
                 # Plot all points with same alpha
                 self.ax.scatter(x_vals, y_vals, z_vals, c='blue', alpha=0.8, s=20)
 
+            # Connect points with lines if gap is less than 0.5 seconds
+            if len(x_vals) > 1:
+                self.plot_connected_lines(timestamps, x_vals, y_vals, z_vals)
+
             # Auto-adjust limits with some padding
             x_min, x_max = np.min(x_vals), np.max(x_vals)
             y_min, y_max = np.min(y_vals), np.max(y_vals)
@@ -235,6 +239,40 @@ class RealtimePlotter:
             self.ax.set_zlim(0, 10)
 
         plt.tight_layout()
+
+    def plot_connected_lines(self, timestamps, x_vals, y_vals, z_vals):
+        """Connect points with lines if the time gap is less than 0.5 seconds."""
+        max_gap = 0.5  # Maximum gap in seconds to connect points
+
+        # Find segments where points are close enough in time
+        segments = []
+        current_segment = [0]  # Start with first point
+
+        for i in range(1, len(timestamps)):
+            time_gap = timestamps[i] - timestamps[i-1]
+            if time_gap <= max_gap:
+                # Continue current segment
+                current_segment.append(i)
+            else:
+                # Gap too large, end current segment and start new one
+                if len(current_segment) > 1:
+                    segments.append(current_segment)
+                current_segment = [i]
+
+        # Add the last segment if it has multiple points
+        if len(current_segment) > 1:
+            segments.append(current_segment)
+
+        # Plot each connected segment
+        for segment in segments:
+            if len(segment) > 1:
+                seg_x = x_vals[segment]
+                seg_y = y_vals[segment]
+                seg_z = z_vals[segment]
+
+                # Plot line connecting points in this segment
+                self.ax.plot(seg_x, seg_y, seg_z,
+                           color='red', alpha=0.6, linewidth=1.5)
 
     def start_plotting(self):
         """Start the real-time plotting."""

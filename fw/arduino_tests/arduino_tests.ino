@@ -1,5 +1,6 @@
 // ESP32 Touch Test
 // Just test touch pin - Touch0 is T0 which is on GPIO 4.
+#include "driver/touch_sens.h"
 
 int32_t offset[8];
 int32_t readings[8];
@@ -19,21 +20,81 @@ const char board[10][9] = {
   {'s', '.', 'f', '.', '.', '.', '.', '.', '.'}
 };
 
+
+#define EXAMPLE_TOUCH_SAMPLE_CFG_DEFAULT()      {TOUCH_SENSOR_V2_DEFAULT_SAMPLE_CONFIG(500, TOUCH_VOLT_LIM_L_0V5, TOUCH_VOLT_LIM_H_2V2)}
+#define EXAMPLE_TOUCH_CHAN_CFG_DEFAULT()        {  \
+    .active_thresh = {2000},  \
+    .charge_speed = TOUCH_CHARGE_SPEED_7,  \
+    .init_charge_volt = TOUCH_INIT_CHARGE_VOLT_DEFAULT,  \
+}
+
+// Touch version 3 supports multiple sample configurations (i.e. supports frequency hopping),
+// others only have one set of sample configurations.
+#define EXAMPLE_TOUCH_CHANNEL_NUM           8
+
+
+// The touch channel IDs that used in this example
+// For the corresponding GPIOs of these channel, please refer to 'touch_sensor_channel.h'
+static int s_channel_id[EXAMPLE_TOUCH_CHANNEL_NUM] = {
+    1,
+    2,
+    10,
+    9,
+    11,
+    12,
+    3,
+    4,
+};
+
+/* Handles of touch sensor */
+touch_sensor_handle_t sens_handle = NULL;
+touch_channel_handle_t chan_handle[EXAMPLE_TOUCH_CHANNEL_NUM];
+
+
+
+
+void initTouch() {
+
+     /* Step 1: Create a new touch sensor controller handle with default sample configuration */
+     touch_sensor_sample_config_t sample_cfg[TOUCH_SAMPLE_CFG_NUM] = EXAMPLE_TOUCH_SAMPLE_CFG_DEFAULT();
+     touch_sensor_config_t sens_cfg = TOUCH_SENSOR_DEFAULT_BASIC_CONFIG(1, sample_cfg);
+     touch_sensor_new_controller(&sens_cfg, &sens_handle);
+
+     /* Step 2: Create and enable the new touch channel handles with default configurations */
+     touch_channel_config_t chan_cfg = EXAMPLE_TOUCH_CHAN_CFG_DEFAULT();
+     /* Allocate new touch channel on the touch controller */
+     for (int i = 0; i < EXAMPLE_TOUCH_CHANNEL_NUM; i++) {
+         touch_sensor_new_channel(sens_handle, s_channel_id[i], &chan_cfg, &chan_handle[i]);
+     }
+     printf("=================================\n");
+
+     /* Step 3: Confiture the default filter for the touch sensor (Note: Touch V1 uses software filter) */
+     touch_sensor_filter_config_t filter_cfg = TOUCH_SENSOR_DEFAULT_FILTER_CONFIG();
+     touch_sensor_config_filter(sens_handle, &filter_cfg);
+
+     /* Step 6: Enable the touch sensor */
+     touch_sensor_enable(sens_handle);
+
+     /* Step 7: Start continuous scanning, you can also trigger oneshot scanning manually */
+     touch_sensor_start_continuous_scanning(sens_handle);
+
+}
+
+
 void readPads(int32_t readings[8]) {
-  readings[0] = touchRead(1);
-  readings[1] = touchRead(2);
-  readings[2] = touchRead(10);
-  readings[3] = touchRead(9);
-  readings[4] = touchRead(11);
-  readings[5] = touchRead(12);
-  readings[6] = touchRead(3);
-  readings[7] = touchRead(4);
+  uint32_t benchmark = 0;
+  uint32_t data = 0;
+  for(int i = 0; i < EXAMPLE_TOUCH_CHANNEL_NUM; i++) {
+    touch_channel_read_data(chan_handle[i], TOUCH_CHAN_DATA_TYPE_BENCHMARK, &benchmark);
+    touch_channel_read_data(chan_handle[i], TOUCH_CHAN_DATA_TYPE_SMOOTH, &data);
+    readings[i] = data - benchmark;
+  }
 }
 
 
 void setup() {
   Serial.begin(115200);
-  readPads(offset);
+  initTouch();
 
   delay(1000);  // give me time to bring up serial monitor
   Serial.println("ESP32 Touch Test");
@@ -42,10 +103,6 @@ void setup() {
 void loop() {
   readPads(readings);
 
-  uint32_t zero = touchRead(0);
-  for(int i =0; i < 8; i++) {
-    readings[i] -= offset[i];
-  }
   calculate(readings, x, y, z);
   gestureFSM(x, y, z);
 
@@ -56,7 +113,7 @@ void loop() {
   // delay(50);
 
   if (z > .5) {
-    printf("%ld, %f, %f, %f\n", micros(), x, y, z);
+    // printf("%ld, %f, %f, %f\n", micros(), x, y, z);
   }
 }
 
@@ -92,8 +149,8 @@ void calculate(int32_t readings[8], float &x, float &y, float &z) {
   }
 
   x = 1.0 * centroid_x / sum_x;
-  y = 1.0 * centroid_y / sum_y * 0.8; // small correction factor since x and y pads are different capacitance
-  z = (sum_x + sum_y) / 10000.0;
+  y = 1.0 * centroid_y / sum_y;
+  z = (sum_x + sum_y) / 5000.0;
 
 
 }
@@ -120,7 +177,7 @@ void gestureFSM(float x, float y, float z) {
       }
       break;
     case TRACKING_GESTURE:
-     if (z < TOUCH_THRESHOLD) { // TODO: add hysteresis?
+     if (z < TOUCH_THRESHOLD * .8) { // TODO: add hysteresis?
         calculateGesture(start_x, start_y, x, y);
         state = WAITING_FOR_TOUCH;
       }
@@ -146,7 +203,7 @@ void calculateGesture(float start_x, float start_y, float end_x, float end_y) {
 
   }
 
-  // printf("%c, , , ,\n", board[getPosition(start_x, start_y, 2)][gesture]);
+  printf(", , , , %c\n", board[getPosition(start_x, start_y, 2)][gesture]);
   Serial.flush();
 }
 

@@ -5,6 +5,21 @@
 # Dev Logs
 
 
+## 2025-08-13
+Now I want to try and improve the gesture detection because it isn't very reliable. I'm going to
+start by switching to the esp idf touch interface so I have more control.
+
+I have the esp idf example working and somewhat stripped down now. I think the next step will be to
+encapsulate it into a class and combine it with the other test program I had before.
+
+Wow, the readings from using the esp idf (with subtracting the benchmark) is so much better and
+consistent then the arduino one. It even corrects for the differences in capacitance between rows
+and columns. It probably still needs some improvements but as-is it is still so much better than
+before.
+
+I'll need to refactor the code, but I might start by adding the usb keyboard library to reach a v0.1
+milestone.
+
 ## 2025-08-01
 I got some of the basic gestures working and can now detect taps, or swipes in any of the 8
 directions. Next steps will be to add all of the characters and print the right one based on where
