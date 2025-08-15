@@ -5,6 +5,22 @@
 # Dev Logs
 
 
+## 2025-08-15
+I refactored the 'touchpad' portion of the code into it's own class. It still needs some work, but
+it is at least a start at encapsulating the different functionalities separately. The Touchpad class
+contains (most of) the logic for setting up the capacitive touch sensors, reading the values, and
+calculating the x, y, and z values.
+
+## 2025-08-14
+It works! I'm able to type all of the lower case characters and I even added backspace. When I
+refactor, I want to see about adding additional gestures (such as swipe there and back, long press,
+and circles). I also want to move the statemachine into a callback so that it runs once a new
+measurement has been made. I also want to add some statefulness to it so I can trigger the shift key
+for example, or switch to a mouse mode.
+
+It could be broken down into ~3 logical pieces: Setting up and reading touch, capturing a gesture,
+and converting that gesture to some action.
+
 ## 2025-08-13
 Now I want to try and improve the gesture detection because it isn't very reliable. I'm going to
 start by switching to the esp idf touch interface so I have more control.

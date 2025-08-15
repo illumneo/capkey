@@ -1,6 +1,14 @@
 // ESP32 Touch Test
 // Just test touch pin - Touch0 is T0 which is on GPIO 4.
 #include "driver/touch_sens.h"
+#include "USB.h"
+#include "USBHIDKeyboard.h"
+
+#include "touchpad.h"
+
+#define EXAMPLE_TOUCH_SAMPLE_CFG_DEFAULT()      {TOUCH_SENSOR_V2_DEFAULT_SAMPLE_CONFIG(500, TOUCH_VOLT_LIM_L_0V5, TOUCH_VOLT_LIM_H_2V2)}
+
+USBHIDKeyboard Keyboard;
 
 int32_t offset[8];
 int32_t readings[8];
@@ -17,25 +25,14 @@ const char board[10][9] = {
   {'r', '.', '.', 'm', '.', '.', '.', '.', '.'},
   {'t', '.', '.', '.', '.', '.', '.', ' ', 'y'},
   {'e', 'w', '.', '.', '.', '.', '.', 'z', '.'},
-  {'s', '.', 'f', '.', '.', '.', '.', '.', '.'}
+  {'s', '.', 'f', KEY_BACKSPACE, '.', '.', '.', '.', '.'}
 };
 
-
-#define EXAMPLE_TOUCH_SAMPLE_CFG_DEFAULT()      {TOUCH_SENSOR_V2_DEFAULT_SAMPLE_CONFIG(500, TOUCH_VOLT_LIM_L_0V5, TOUCH_VOLT_LIM_H_2V2)}
-#define EXAMPLE_TOUCH_CHAN_CFG_DEFAULT()        {  \
-    .active_thresh = {2000},  \
-    .charge_speed = TOUCH_CHARGE_SPEED_7,  \
-    .init_charge_volt = TOUCH_INIT_CHARGE_VOLT_DEFAULT,  \
-}
-
-// Touch version 3 supports multiple sample configurations (i.e. supports frequency hopping),
-// others only have one set of sample configurations.
-#define EXAMPLE_TOUCH_CHANNEL_NUM           8
 
 
 // The touch channel IDs that used in this example
 // For the corresponding GPIOs of these channel, please refer to 'touch_sensor_channel.h'
-static int s_channel_id[EXAMPLE_TOUCH_CHANNEL_NUM] = {
+static uint8_t s_channel_id[8] = {
     1,
     2,
     10,
@@ -48,9 +45,8 @@ static int s_channel_id[EXAMPLE_TOUCH_CHANNEL_NUM] = {
 
 /* Handles of touch sensor */
 touch_sensor_handle_t sens_handle = NULL;
-touch_channel_handle_t chan_handle[EXAMPLE_TOUCH_CHANNEL_NUM];
 
-
+Touchpad touchpad(sens_handle, s_channel_id);
 
 
 void initTouch() {
@@ -60,13 +56,15 @@ void initTouch() {
      touch_sensor_config_t sens_cfg = TOUCH_SENSOR_DEFAULT_BASIC_CONFIG(1, sample_cfg);
      touch_sensor_new_controller(&sens_cfg, &sens_handle);
 
-     /* Step 2: Create and enable the new touch channel handles with default configurations */
-     touch_channel_config_t chan_cfg = EXAMPLE_TOUCH_CHAN_CFG_DEFAULT();
-     /* Allocate new touch channel on the touch controller */
-     for (int i = 0; i < EXAMPLE_TOUCH_CHANNEL_NUM; i++) {
-         touch_sensor_new_channel(sens_handle, s_channel_id[i], &chan_cfg, &chan_handle[i]);
-     }
-     printf("=================================\n");
+     touchpad.initTouch();
+
+    //  /* Step 2: Create and enable the new touch channel handles with default configurations */
+    //  touch_channel_config_t chan_cfg = EXAMPLE_TOUCH_CHAN_CFG_DEFAULT();
+    //  /* Allocate new touch channel on the touch controller */
+    //  for (int i = 0; i < EXAMPLE_TOUCH_CHANNEL_NUM; i++) {
+    //      touch_sensor_new_channel(sens_handle, s_channel_id[i], &chan_cfg, &chan_handle[i]);
+    //  }
+    //  printf("=================================\n");
 
      /* Step 3: Confiture the default filter for the touch sensor (Note: Touch V1 uses software filter) */
      touch_sensor_filter_config_t filter_cfg = TOUCH_SENSOR_DEFAULT_FILTER_CONFIG();
@@ -81,39 +79,25 @@ void initTouch() {
 }
 
 
-void readPads(int32_t readings[8]) {
-  uint32_t benchmark = 0;
-  uint32_t data = 0;
-  for(int i = 0; i < EXAMPLE_TOUCH_CHANNEL_NUM; i++) {
-    touch_channel_read_data(chan_handle[i], TOUCH_CHAN_DATA_TYPE_BENCHMARK, &benchmark);
-    touch_channel_read_data(chan_handle[i], TOUCH_CHAN_DATA_TYPE_SMOOTH, &data);
-    readings[i] = data - benchmark;
-  }
-}
-
-
 void setup() {
   Serial.begin(115200);
   initTouch();
 
   delay(1000);  // give me time to bring up serial monitor
   Serial.println("ESP32 Touch Test");
+
+  Keyboard.begin();
+  USB.begin();
 }
 
 void loop() {
-  readPads(readings);
+  touchpad.processInputs();
 
-  calculate(readings, x, y, z);
+  touchpad.read(x, y, z);
   gestureFSM(x, y, z);
 
-  // printf("%f, %f, %f", x, y, z);
-  // printf(",%d ", getPosition(x, y, z));
-
-  // printf("\n");
-  // delay(50);
-
   if (z > .5) {
-    // printf("%ld, %f, %f, %f\n", micros(), x, y, z);
+    printf("%ld, %f, %f, %f\n", micros(), x, y, z);
   }
 }
 
@@ -136,23 +120,6 @@ int getPosition(float x, float y, float z) {
     }
   }
   return pos;
-}
-void calculate(int32_t readings[8], float &x, float &y, float &z) {
-  int32_t sum_x = 0, sum_y = 0, centroid_x = 0, centroid_y = 0;
-  float weight[4] {-1.5, -.5, .5, 1.5};
-  for (int i = 0; i < 4; i++) {
-    sum_x += readings[i];
-    sum_y += readings[4 + i];
-
-    centroid_x += readings[i] * weight[i];
-    centroid_y += readings[4 + i] * weight[i];
-  }
-
-  x = 1.0 * centroid_x / sum_x;
-  y = 1.0 * centroid_y / sum_y;
-  z = (sum_x + sum_y) / 5000.0;
-
-
 }
 
 enum GestureState {
@@ -205,6 +172,7 @@ void calculateGesture(float start_x, float start_y, float end_x, float end_y) {
 
   printf(", , , , %c\n", board[getPosition(start_x, start_y, 2)][gesture]);
   Serial.flush();
+  Keyboard.write(board[getPosition(start_x, start_y, 2)][gesture]);
 }
 
 /*
@@ -241,4 +209,32 @@ on press:
 on release: (Is on release reasonable? will the data be okay?)
 - if magnitude < X --> it's a tap
 - else, get angle
+
+
+
+Json:
+keys: [
+  {
+  // Types: tap, swipe, longpress, swipeback, longswipe, circle CW, circle CCW
+    //"Location": [primary(tap/swipe), secondary(longpress/swipeback), tertiary(circle)]
+    "center": ["A"],
+    "topLeft": ["A",],
+    "top": ["A"],
+    "topRight": ["A"],
+    "left": ["A"],
+    "right": "A",
+    "bottomLeft": "A",
+    "bottom": "A",
+    "bottomRight": "A",
+
+    // How do I handle hold gestures (multi delete, move cursor, etc)? Or stateful ones (shift, ctrl, etc)?
+    // Also, I want to be able to print a string (such as url for the project page, version #, etc)
+
+Could generate 'current guess' on each tick, and then based on time, movement, or release, it could change?
+
+
+  }
+]
+
+
 */
