@@ -5,6 +5,14 @@
 # Dev Logs
 
 
+## 2025-08-16
+I'm thinking that the gesture processing logic should be in it's own thread, and that way it can be
+waiting for data, and then immediately start processing it.
+
+I created a class for gestures and moved the existing gesture logic into it. It still need some
+clean up and improvements, but I'm happy to see that it still works. I think next I'll see about
+making the configuration more robust (maybe json based?) and adding additional gesture detection.
+
 ## 2025-08-15
 I refactored the 'touchpad' portion of the code into it's own class. It still needs some work, but
 it is at least a start at encapsulating the different functionalities separately. The Touchpad class

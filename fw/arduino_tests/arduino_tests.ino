@@ -1,34 +1,14 @@
 // ESP32 Touch Test
 // Just test touch pin - Touch0 is T0 which is on GPIO 4.
 #include "driver/touch_sens.h"
-#include "USB.h"
-#include "USBHIDKeyboard.h"
+
 
 #include "touchpad.h"
+#include "gesture.h"
 
 #define EXAMPLE_TOUCH_SAMPLE_CFG_DEFAULT()      {TOUCH_SENSOR_V2_DEFAULT_SAMPLE_CONFIG(500, TOUCH_VOLT_LIM_L_0V5, TOUCH_VOLT_LIM_H_2V2)}
 
-USBHIDKeyboard Keyboard;
-
-int32_t offset[8];
-int32_t readings[8];
-float x, y, z;
-
-const char board[10][9] = {
-  //c    N    NW   W    SW   S    SE   E    NE
-  {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
-  {'a', '.', '.', '.', '.', '.', 'v', '\n', '.'},
-  {'n', '.', '.', '.', '.', 'l', '.', '.', '.'},
-  {'i', '.', '.', '.', 'x', '.', '.', '.', '.'},
-  {'h', '.', '.', '.', '.', '.', '.', 'k', '.'},
-  {'o', 'u', 'q', 'c', 'g', 'd', 'j', 'b', 'p'},
-  {'r', '.', '.', 'm', '.', '.', '.', '.', '.'},
-  {'t', '.', '.', '.', '.', '.', '.', ' ', 'y'},
-  {'e', 'w', '.', '.', '.', '.', '.', 'z', '.'},
-  {'s', '.', 'f', KEY_BACKSPACE, '.', '.', '.', '.', '.'}
-};
-
-
+QueueHandle_t touchpad_position_queue;
 
 // The touch channel IDs that used in this example
 // For the corresponding GPIOs of these channel, please refer to 'touch_sensor_channel.h'
@@ -46,8 +26,9 @@ static uint8_t s_channel_id[8] = {
 /* Handles of touch sensor */
 touch_sensor_handle_t sens_handle = NULL;
 
-Touchpad touchpad(sens_handle, s_channel_id);
+Touchpad touchpad(sens_handle, s_channel_id, touchpad_position_queue);
 
+Gesture gesture(touchpad_position_queue);
 
 void initTouch() {
 
@@ -78,101 +59,20 @@ void initTouch() {
 
 }
 
-
 void setup() {
   Serial.begin(115200);
+  touchpad_position_queue = xQueueCreate(1, sizeof(TouchpadPosition));
+
   initTouch();
 
-  delay(1000);  // give me time to bring up serial monitor
-  Serial.println("ESP32 Touch Test");
+  gesture.init();
 
-  Keyboard.begin();
-  USB.begin();
+  xTaskCreate(gestureTask, "Gesture Task", 4096, &gesture, 10, NULL);
 }
 
 void loop() {
-  touchpad.processInputs();
 
-  touchpad.read(x, y, z);
-  gestureFSM(x, y, z);
-
-  if (z > .5) {
-    printf("%ld, %f, %f, %f\n", micros(), x, y, z);
-  }
-}
-
-int getPosition(float x, float y, float z) {
-  static int pos = 0;
-  if (z > 1) { // touch detected
-    if(y < -.5) {
-      pos = 1;
-    } else if ( y < .5) {
-      pos = 2;
-    } else {
-      pos = 3;
-    }
-    if(x < -.5) {
-      pos += 0;
-    } else if ( x < .5) {
-      pos += 3;
-    } else {
-      pos += 6;
-    }
-  }
-  return pos;
-}
-
-enum GestureState {
-  WAITING_FOR_TOUCH,
-  TRACKING_GESTURE,
-  DETECTING_GESTURE
-};
-
-const float TOUCH_THRESHOLD = 2;
-
-
-
-void gestureFSM(float x, float y, float z) {
-  static GestureState state = WAITING_FOR_TOUCH;
-  static float start_x, start_y;
-  switch (state) {
-    case WAITING_FOR_TOUCH:
-      if (z > TOUCH_THRESHOLD) {
-        state = TRACKING_GESTURE;
-        start_x = x;
-        start_y = y;
-      }
-      break;
-    case TRACKING_GESTURE:
-     if (z < TOUCH_THRESHOLD * .8) { // TODO: add hysteresis?
-        calculateGesture(start_x, start_y, x, y);
-        state = WAITING_FOR_TOUCH;
-      }
-  }
-}
-
-void calculateGesture(float start_x, float start_y, float end_x, float end_y) {
-  float x = end_x - start_x;
-  float y = end_y - start_y;
-  float angle = atan2(y, x) * 180.0 / M_PI + 180;
-  float distance = sqrt(x*x + y*y);
-  uint8_t gesture;
-  // printf("%d, ", getPosition(start_x, start_y, 2));
-  if (distance < .5) { // just a tap, no movement
-    // printf("@@tap %f, %f\n", angle, distance);
-    gesture = 0;
-  } else {
-    gesture = (int) (angle + 22.5+45)/45;
-    if (gesture == 9) {
-      gesture = 1;
-    }
-    // printf("@@swipe %f, %f, d: %d\n", angle, distance, (int) (angle + 22.5)/45);
-
-  }
-
-  printf(", , , , %c\n", board[getPosition(start_x, start_y, 2)][gesture]);
-  Serial.flush();
-  Keyboard.write(board[getPosition(start_x, start_y, 2)][gesture]);
+  delay(1000);
 }
 
 /*
