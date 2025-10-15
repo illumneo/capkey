@@ -7,6 +7,7 @@ This script creates SVG files containing capacitive touch pad layouts with:
 - Configurable pad spacing, size and corner radius
 
 Usage:
+    pip install svg.py
     python3 generate_svg_capacitive_touch.py
     xdg-open touch_pads.svg
 
@@ -636,7 +637,7 @@ def demo_pads() -> svg.SVG:
     )
 
 
-def pcb():
+def mini_pcb():
     flower4x4 = FlowerTouchPad(
         pitch=18 / 4,
         radius=0.15,
@@ -657,7 +658,35 @@ def pcb():
     )
 
 
+def write_pcb_50mm():
+
+    flower50mm_6x6 = FlowerTouchPad(
+        pitch=49.2 / 6,  # 49.2: for a bit of extra space around the edges
+        radius=0.2,
+        separation=0.2,
+        trace_width=0.16,
+        x_count=6,
+        y_count=6,
+    )
+
+    for fname, pad in [
+        ("touch_pads.svg", flower50mm_6x6.generate()),
+        ("back_traces.svg", flower50mm_6x6.generate_back_traces(via_diameter=0.4)),
+    ]:
+        with open(fname, "w") as f:
+            image = svg.SVG(
+                width="50mm",
+                height="50mm",
+                viewBox="0 0 50 50",
+                elements=[
+                    pad,
+                ],
+            )
+            f.write(str(image))
+
+
 if __name__ == "__main__":
     with open("touch_pads.svg", "w") as f:
         # f.write(str(demo_pads()))
-        f.write(str(pcb()))
+        # f.write(str(mini_pcb()))
+        write_pcb_50mm()

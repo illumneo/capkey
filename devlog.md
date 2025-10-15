@@ -4,6 +4,41 @@
 <img src="./docs/demo.svg">
 # Dev Logs
 
+## 2025-10-14
+I finished the front graphics enough for me to order the pcbs. Now I'm just cleaning up the commit
+history (I really should have committed stuff more often, but I've been rushing to get it done in
+time for HaD SuperCon).
+
+
+## 2025-10-13
+Next time I lay out the pcb, I should name the nets first, and then manually connect it.
+
+I Also made a script to generate the silkscreen images for the keyboard. Unfortunately kicad doesn't
+process text elements in svg, so I have to use inkscape to convert the svg text elements to paths.
+Then Kicad is able to read it correctly.
+
+
+## 2025-10-10
+Actually, I think I'll go in the other direction and make it bigger (maybe 42 to 50 mm), that way it
+can be actually useful for some people. That is also the typical width of a business card. And this
+time I can try and keep a document of how to use the tool and the steps along the way. (I think I'll
+still order some of the smaller ones but it would be cool to have the bigger ones too.)
+
+so new plan:
+- Make small changes to the existing design (mainly via diameter and silkscreen changes)
+- Make new larger design too, documenting it
+
+jlcpcb specifications:
+- via hole diameter: .3mm
+- via diameter (+.1/.15): .4mm or .45mm
+
+## 2025-10-08
+I want to try and get something finished and ready to be passed out for the Hackaday SuperCon.
+It should be minimal changes from my first rev so that it doesn't take too long, but at least:
+- add url and QR code for github
+- change via diameter to .3mm for jlcpcb
+- maybe shrink sides a bit?
+- update silkscreen to be thicker, & add more characters
 
 ## 2025-08-16
 I'm thinking that the gesture processing logic should be in it's own thread, and that way it can be
