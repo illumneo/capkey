@@ -4,6 +4,26 @@
 <img src="./docs/demo.svg">
 # Dev Logs
 
+## 2025-10-21
+I've cleaned up the code a bit and I'll commit it now in it's mostly working state. I think I want
+to reverse the direction of x and y so that up and to the right is positive. And I want to make it
+so that the value ranges from about -1 to 1 instead of the 1.5 right now. I'll also rename the
+touchpads so that they are named with the x_y coordinates instead of numbers so that they could be
+reused for the 4x4 board.
+
+
+## 2025-10-20
+I've been working on cleaning up the code a bit and on adding better gesture detection. I used some
+AI code generation with somewhat mixed results. It was able to generate stuff that mostly work but
+was overly complicated and not idea. It was however a good starting point for refactoring the code
+to separate the keymap/config from the gesture detection class. Using switch statements might not be
+the most extensible option, but it's better then what I had previously.
+
+The method's it uses for detecting circles and swipe-returns still leave a bit to be desired, but I
+can work on cleaning those up later. For now I'm going to clean up the code, make sure the AI
+generated code is okay and that the keyboard still works, and then I'll commit the code
+
+
 ## 2025-10-14
 I finished the front graphics enough for me to order the pcbs. Now I'm just cleaning up the commit
 history (I really should have committed stuff more often, but I've been rushing to get it done in
