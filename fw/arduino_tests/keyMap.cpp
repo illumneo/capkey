@@ -41,6 +41,9 @@ void KeyMap::handleKey0(GestureType gesture, Direction direction) {
         case makeKey(GESTURE_SWIPE_SHORT, DIR_EAST):
             charAction('\n');
             break;
+        case makeKey(GESTURE_SWIPE_LONG, DIR_EAST):
+            charAction(' ');
+            break;
         default:
             break;
     }
@@ -69,6 +72,9 @@ void KeyMap::handleKey2(GestureType gesture, Direction direction) {
         case makeKey(GESTURE_SWIPE_SHORT, DIR_SOUTHWEST):
             charAction('x');
             break;
+        case makeKey(GESTURE_SWIPE_LONG, DIR_WEST):
+            backspaceAction();
+            break;
         default:
             break;
     }
@@ -82,6 +88,9 @@ void KeyMap::handleKey3(GestureType gesture, Direction direction) {
             break;
         case makeKey(GESTURE_SWIPE_SHORT, DIR_EAST):
             charAction('k');
+            break;
+        case makeKey(GESTURE_SWIPE_LONG, DIR_EAST):
+            charAction(' ');
             break;
         default:
             break;
@@ -170,6 +179,9 @@ void KeyMap::handleKey5(GestureType gesture, Direction direction) {
         case makeKey(GESTURE_SWIPE_SHORT, DIR_WEST):
             charAction('m');
             break;
+        case makeKey(GESTURE_SWIPE_LONG, DIR_WEST):
+            backspaceAction();
+            break;
         default:
             break;
     }
@@ -186,6 +198,9 @@ void KeyMap::handleKey6(GestureType gesture, Direction direction) {
             break;
         case makeKey(GESTURE_SWIPE_SHORT, DIR_NORTHEAST):
             charAction('y');
+            break;
+        case makeKey(GESTURE_SWIPE_LONG, DIR_EAST):
+            charAction(' ');
             break;
         default:
             break;
@@ -219,6 +234,9 @@ void KeyMap::handleKey8(GestureType gesture, Direction direction) {
             charAction('f');
             break;
         case makeKey(GESTURE_SWIPE_SHORT, DIR_WEST):
+            backspaceAction();
+            break;
+        case makeKey(GESTURE_SWIPE_LONG, DIR_WEST):
             backspaceAction();
             break;
         default:

@@ -9,14 +9,17 @@ QueueHandle_t touchpad_position_queue;
 // The touch channel IDs that used in this example
 // For the corresponding GPIOs of these channel, please refer to 'touch_sensor_channel.h'
 static uint8_t s_channel_id[8] = {
-    1,
-    2,
-    10,
-    9,
+    // Columns
     11,
     12,
     3,
     4,
+    // Rows
+    9,
+    10,
+    2,
+    1,
+
 };
 
 /* Handles of touch sensor */
