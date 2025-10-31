@@ -72,11 +72,6 @@ bool GestureDetector::update(float x, float y, float z, uint32_t timestamp) {
     return false;
 }
 
-void GestureDetector::reset() {
-    state_ = STATE_IDLE;
-    detected_gesture_ = DetectedGesture();
-}
-
 uint8_t GestureDetector::getGridPosition(float x, float y) const {
     // Convert x, y coordinates to grid position (0-8 for 3x3 grid)
     // Assumes origin at center of grid
@@ -85,10 +80,10 @@ uint8_t GestureDetector::getGridPosition(float x, float y) const {
     else if (x > GRID_CELL_WIDTH/2) col = 2;
 
     int row = 1;  // Default to middle row
-    if (y < -GRID_CELL_HEIGHT/2) row = 0;
-    else if (y > GRID_CELL_HEIGHT/2) row = 2;
+    if (y > GRID_CELL_HEIGHT/2) row = 0;
+    else if (y < -GRID_CELL_HEIGHT/2) row = 2;
 
-    return row + (col  * GRID_COLS);
+    return col + (row  * GRID_COLS);
 }
 
 void GestureDetector::addPathPoint(float x, float y) {
@@ -274,14 +269,14 @@ Direction GestureDetector::getDirectionFromAngle(float angle_deg) const {
 
     // Map angle to 8 directions
     // South = 0°, East = 90°, North = 180°, West = 270°
-    if (angle_deg >= 337.5f || angle_deg < 22.5f) return DIR_SOUTH;
-    if (angle_deg >= 22.5f && angle_deg < 67.5f) return DIR_SOUTHEAST;
-    if (angle_deg >= 67.5f && angle_deg < 112.5f) return DIR_EAST;
-    if (angle_deg >= 112.5f && angle_deg < 157.5f) return DIR_NORTHEAST;
-    if (angle_deg >= 157.5f && angle_deg < 202.5f) return DIR_NORTH;
-    if (angle_deg >= 202.5f && angle_deg < 247.5f) return DIR_NORTHWEST;
-    if (angle_deg >= 247.5f && angle_deg < 292.5f) return DIR_WEST;
-    return DIR_SOUTHWEST;
+    if (angle_deg >= 337.5f || angle_deg < 22.5f) return DIR_EAST;
+    if (angle_deg >= 22.5f && angle_deg < 67.5f) return DIR_NORTHEAST;
+    if (angle_deg >= 67.5f && angle_deg < 112.5f) return DIR_NORTH;
+    if (angle_deg >= 112.5f && angle_deg < 157.5f) return DIR_NORTHWEST;
+    if (angle_deg >= 157.5f && angle_deg < 202.5f) return DIR_WEST;
+    if (angle_deg >= 202.5f && angle_deg < 247.5f) return DIR_SOUTHWEST;
+    if (angle_deg >= 247.5f && angle_deg < 292.5f) return DIR_SOUTH;
+    return DIR_SOUTHEAST;
 }
 
 float GestureDetector::calculateAngle(float dx, float dy) const {

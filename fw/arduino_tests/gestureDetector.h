@@ -20,9 +20,6 @@ public:
     // Get the most recently detected gesture
     DetectedGesture getDetectedGesture() const { return detected_gesture_; }
 
-    // Reset the detector state
-    void reset();
-
 private:
     // State machine
     GestureState state_ = STATE_IDLE;
