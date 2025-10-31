@@ -25,9 +25,18 @@ static uint8_t s_channel_id[8] = {
 /* Handles of touch sensor */
 touch_sensor_handle_t sens_handle = NULL;
 
-Touchpad touchpad(sens_handle, s_channel_id, touchpad_position_queue);
+// Touchpad with 4 rows and 4 columns (default)
+Touchpad<4, 4> touchpad(sens_handle, s_channel_id, touchpad_position_queue);
 
-Gesture gesture(touchpad_position_queue);
+Gesture<4, 4> gesture(touchpad_position_queue);
+
+// Task function to run Gesture::tick()
+void gestureTask(void *pvParameters) {
+    Gesture<4, 4> *gesture = (Gesture<4, 4> *)pvParameters;
+    while (1) {
+        gesture->tick();
+    }
+}
 
 void initTouch() {
     /* Step 1: Create a new touch sensor controller handle with default sample configuration */
@@ -53,7 +62,7 @@ void setup() {
     Serial.begin(115200);
 
     // Create queue for passing touch data from ISR to gesture task
-    touchpad_position_queue = xQueueCreate(1, sizeof(TouchpadPosition));
+    touchpad_position_queue = xQueueCreate(1, sizeof(TouchpadPosition<4, 4>));
 
     // Initialize touch sensor hardware
     initTouch();
