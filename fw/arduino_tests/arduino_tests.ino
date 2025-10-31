@@ -2,7 +2,7 @@
 #include "touchpad.h"
 #include "gesture.h"
 
-#define EXAMPLE_TOUCH_SAMPLE_CFG_DEFAULT()      {TOUCH_SENSOR_V2_DEFAULT_SAMPLE_CONFIG(500, TOUCH_VOLT_LIM_L_0V5, TOUCH_VOLT_LIM_H_2V2)}
+#define EXAMPLE_TOUCH_SAMPLE_CFG_DEFAULT()      {TOUCH_SENSOR_V2_DEFAULT_SAMPLE_CONFIG(300, TOUCH_VOLT_LIM_L_0V5, TOUCH_VOLT_LIM_H_2V2)}
 
 QueueHandle_t touchpad_position_queue;
 
@@ -22,17 +22,42 @@ static uint8_t s_channel_id[8] = {
 
 };
 
+static uint8_t large_grid_channel_id[12] = {
+    // Columns
+    11,
+    9,
+    10,
+    2,
+    3,
+    4,
+    // // Rows
+    // 1,
+    // 12,
+    // 8,
+    // 5,
+    // 6,
+    // 7,
+    // Rows
+    7,
+    6,
+    5,
+    8,
+    12,
+    1,
+
+};
+
 /* Handles of touch sensor */
 touch_sensor_handle_t sens_handle = NULL;
 
 // Touchpad with 4 rows and 4 columns (default)
-Touchpad<4, 4> touchpad(sens_handle, s_channel_id, touchpad_position_queue);
+Touchpad<6, 6> touchpad(sens_handle, large_grid_channel_id, touchpad_position_queue);
 
-Gesture<4, 4> gesture(touchpad_position_queue);
+Gesture<6, 6> gesture(touchpad_position_queue);
 
 // Task function to run Gesture::tick()
 void gestureTask(void *pvParameters) {
-    Gesture<4, 4> *gesture = (Gesture<4, 4> *)pvParameters;
+    Gesture<6, 6> *gesture = (Gesture<6, 6> *)pvParameters;
     while (1) {
         gesture->tick();
     }
@@ -62,7 +87,7 @@ void setup() {
     Serial.begin(115200);
 
     // Create queue for passing touch data from ISR to gesture task
-    touchpad_position_queue = xQueueCreate(1, sizeof(TouchpadPosition<4, 4>));
+    touchpad_position_queue = xQueueCreate(1, sizeof(TouchpadPosition<6, 6>));
 
     // Initialize touch sensor hardware
     initTouch();

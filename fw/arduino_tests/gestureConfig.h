@@ -6,8 +6,8 @@
 #define GRID_SIZE (GRID_ROWS * GRID_COLS)
 
 // Touch Detection Thresholds
-#define TOUCH_THRESHOLD 2.5f          // Z-value to consider as "touch started"
-#define TOUCH_RELEASE_THRESHOLD 2.1f  // Z-value to consider as "touch released" (with hysteresis)
+#define TOUCH_THRESHOLD 1.5f          // Z-value to consider as "touch started"
+#define TOUCH_RELEASE_THRESHOLD 1.1f  // Z-value to consider as "touch released" (with hysteresis)
 
 // Distance Thresholds (in normalized coordinates, typically -1.5 to 1.5)
 #define SWIPE_MIN_DISTANCE 0.4f       // Minimum distance for swipe

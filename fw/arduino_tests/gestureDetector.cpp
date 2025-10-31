@@ -72,16 +72,42 @@ bool GestureDetector::update(float x, float y, float z, uint32_t timestamp) {
     return false;
 }
 
-uint8_t GestureDetector::getGridPosition(float x, float y) const {
-    // Convert x, y coordinates to grid position (0-8 for 3x3 grid)
-    // Assumes origin at center of grid
-    int col = 1;  // Default to middle column
-    if (x < -GRID_CELL_WIDTH/2) col = 0;
-    else if (x > GRID_CELL_WIDTH/2) col = 2;
+// uint8_t GestureDetector::getGridPosition(float x, float y) const {
+//     // Convert x, y coordinates to grid position (0-8 for 3x3 grid)
+//     // Assumes origin at center of grid
+//     int col = 1;  // Default to middle column
+//     if (x < -GRID_CELL_WIDTH/2) col = 0;
+//     else if (x > GRID_CELL_WIDTH/2) col = 2;
 
-    int row = 1;  // Default to middle row
-    if (y > GRID_CELL_HEIGHT/2) row = 0;
-    else if (y < -GRID_CELL_HEIGHT/2) row = 2;
+//     int row = 1;  // Default to middle row
+//     if (y > GRID_CELL_HEIGHT/2) row = 0;
+//     else if (y < -GRID_CELL_HEIGHT/2) row = 2;
+
+//     return col + (row  * GRID_COLS);
+// }
+
+uint8_t GestureDetector::getGridPosition(float x, float y) const {
+    uint8_t col = 0;
+    uint8_t row = 0;
+
+    if (x < -1.25) {
+        col = 0;
+    } else if (x < 0) {
+        col = 1;
+    } else if (x < 1.25) {
+        col = 2;
+    } else {
+        col = 3;
+    }
+    if (y > 1.25) {
+        row = 0;
+    } else if (y > 0) {
+        row = 1;
+    } else if (y > -1.25) {
+        row = 2;
+    } else {
+        row = 3;
+    }
 
     return col + (row  * GRID_COLS);
 }

@@ -1,7 +1,5 @@
 #include "gesture.h"
 
-void printGesture(DetectedGesture detected);
-
 const char* gestureTypeStr(int type) {
     switch (type) {
         case 0: return "NONE";

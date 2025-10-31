@@ -4,6 +4,9 @@
 #include "gestureDetector.h"
 #include "keyMap.h"
 
+
+void printGesture(DetectedGesture detected);
+
 template<uint8_t ROWS = 4, uint8_t COLS = 4>
 class Gesture {
 public:
@@ -51,7 +54,7 @@ void Gesture<ROWS, COLS>::tick() {
         //        detected.type, detected.direction, detected.grid_position);
     }
 
-    // Optional: Log high Z values for debugging
+    // // Optional: Log high Z values for debugging
     // if (z > 0.5f) {
     //     printf("%ld, %f, %f, %f\n", position.timestamp, x, y, z);
     // }
