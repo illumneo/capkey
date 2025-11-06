@@ -4,6 +4,11 @@
 <img src="./docs/demo.svg">
 # Dev Logs
 
+## 2025-11-06
+Create a readme and add images. There still is a lot of clean up that is needed, but it's a start.
+There are also still 2 branches that need to be cleaned up and merged in: the large pad branch and
+the i2c sao badge branch.
+
 ## 2025-10-21
 I've cleaned up the code a bit and I'll commit it now in it's mostly working state. I think I want
 to reverse the direction of x and y so that up and to the right is positive. And I want to make it
