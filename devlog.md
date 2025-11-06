@@ -4,6 +4,17 @@
 <img src="./docs/demo.svg">
 # Dev Logs
 
+## 2025-11-1
+Started working on making the keyboard an SAO. I was originally hoping that I could just use the
+USB C port, but I think it ended up being too challenging to get it working correctly. But then I
+switched to trying to use the I2C port (which would make it useful for future projects which would
+be so cool!)
+
+Next steps:
+- Get parts to solder and assemble a SAO connector so it can be attached correctly (without just
+holding jumper wires to the correct pins).
+- Add support for backspace/other characters
+
 ## 2025-10-21
 I've cleaned up the code a bit and I'll commit it now in it's mostly working state. I think I want
 to reverse the direction of x and y so that up and to the right is positive. And I want to make it

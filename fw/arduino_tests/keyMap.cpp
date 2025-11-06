@@ -1,15 +1,26 @@
 #include "keyMap.h"
 #include "gestureTypes.h"
 #include "Arduino.h"
+#include "saoKeyboard.h"
 
-KeyMap::KeyMap()
-    : keyboard_enabled_(true), caps_lock_state_(false) {
+KeyMap::KeyMap(bool enable_sao)
+    : keyboard_enabled_(true),
+      caps_lock_state_(false),
+      sao_keyboard_(nullptr) {
+
+    if (enable_sao) {
+        sao_keyboard_ = new SaoKeyboard();
+    }
 }
 
 void KeyMap::init() {
     if (keyboard_enabled_) {
         keyboard_.begin();
         USB.begin();
+    }
+
+    if (sao_keyboard_) {
+        sao_keyboard_->begin(0x49, 6, 7);
     }
 }
 
@@ -249,6 +260,11 @@ void KeyMap::charAction(char c) {
     if (keyboard_enabled_) {
         keyboard_.write(c);
     }
+
+    if (sao_keyboard_) {
+        sao_keyboard_->sendChar(c);
+    }
+
     Serial.print("Char: ");
     Serial.println(c);
 }
@@ -264,6 +280,9 @@ void KeyMap::stringAction(const char* str) {
 void KeyMap::backspaceAction() {
     if (keyboard_enabled_) {
         keyboard_.write(KEY_BACKSPACE);
+    }
+    if (sao_keyboard_) {
+        sao_keyboard_->sendChar('\b');
     }
     Serial.println("Backspace");
 }

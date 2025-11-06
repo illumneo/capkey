@@ -3,9 +3,11 @@
 #include "USB.h"
 #include "USBHIDKeyboard.h"
 
+class SaoKeyboard;  // Forward declaration
+
 class KeyMap {
 public:
-    KeyMap();
+    KeyMap(bool enable_sao = true);
 
     // Initialize the keyboard
     void init();
@@ -20,6 +22,7 @@ private:
     USBHIDKeyboard keyboard_;
     bool keyboard_enabled_;
     bool caps_lock_state_;
+    SaoKeyboard* sao_keyboard_;
 
     // One handler function per key/grid cell
     void handleKey0(GestureType gesture, Direction direction);  // Top-left

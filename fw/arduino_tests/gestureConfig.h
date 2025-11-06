@@ -11,8 +11,8 @@
 
 // Distance Thresholds (in normalized coordinates, typically -1.5 to 1.5)
 #define SWIPE_MIN_DISTANCE 0.4f       // Minimum distance for swipe
-#define LONG_SWIPE_DISTANCE 1.7f      // Minimum distance for long swipe
-#define SWIPE_RETURN_MIN_DISTANCE 0.8f // How far to swipe before detecting return
+#define LONG_SWIPE_DISTANCE 2.5f      // Minimum distance for long swipe
+#define SWIPE_RETURN_MIN_DISTANCE 2.0f // How far to swipe before detecting return
 
 // Time Thresholds (in microseconds)
 #define HOLD_MIN_DURATION 200000         // Minimum duration for hold
