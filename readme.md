@@ -14,6 +14,13 @@ This project implements a full keyboard interface on a single capacitive touch s
 
 The device appears as a standard USB HID keyboard and can be bodged to also supports I2C communication as a Shitty Add-On (SAO) peripheral.
 
+## ESP-IDF firmware for the 50 mm board
+
+An additional firmware implementation is available in [`fw/esp_idf`](fw/esp_idf).
+It uses ESP-IDF 5.5 and provides standalone USB HID typing, consistent
+capitalization gestures, CDC diagnostic capture, host replay, and regression
+tests. See its [README](fw/esp_idf/README.md) for build and usage instructions.
+
 ## Hardware
 <img src="./docs/large_pad.jpg" width="200"> <img src="./docs/large_back.jpg" width="200">
 

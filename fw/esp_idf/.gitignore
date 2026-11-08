@@ -1,0 +1,7 @@
+/build/
+/sdkconfig.old
+.calibration/
+__pycache__/
+managed_components/
+/data/legacy/
+*.log

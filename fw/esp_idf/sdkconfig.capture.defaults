@@ -1,0 +1,2 @@
+# Apply on top of the existing sdkconfig in a separate build directory.
+CONFIG_SWIPE_DIAGNOSTIC_CAPTURE=y
