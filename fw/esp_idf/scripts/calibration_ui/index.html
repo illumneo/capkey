@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Swipe calibration capture</title>
+  <link rel="stylesheet" href="/style.css">
+  <script defer src="/app.js"></script>
+</head>
+<body>
+  <main>
+    <header><div><p class="eyebrow">CAPKEY · 50 × 50 MM</p><h1>Record once. Replay every change.</h1></div><span id="connection" class="badge">Connecting…</span></header>
+    <p id="synthetic" class="synthetic" hidden>SYNTHETIC UI TEST — these readings are not physical calibration data.</p>
+    <p class="intro">Follow the timed cues on your board. Every attempt is saved, including weak or missed touches.</p>
+    <section class="setup" aria-labelledby="setup-title">
+      <h2 id="setup-title">Your setup</h2>
+      <form id="setup-form">
+        <label>Surface / cover <input id="cover" required placeholder="e.g. bare PCB, printed overlay, unknown" maxlength="240"></label>
+        <label>Grip / support <input id="grip" required placeholder="e.g. flat on desk, held in left hand" maxlength="240"></label>
+        <label>Finger / hand <input id="finger" required placeholder="e.g. right index, unknown" maxlength="120"></label>
+        <label>Notes <input id="notes" placeholder="Optional: cable, enclosure, unusual conditions" maxlength="500"></label>
+        <label>Collection block <select id="block"><option value="pilot">Pilot · about 50 seconds</option><option value="positions">Positions · about 5 minutes + a validation break</option></select></label>
+        <label>Randomization seed <input id="seed" type="number" value="42" min="0" max="2147483647" step="1" required></label>
+        <fieldset><legend>Position timing, seconds</legend><label>Before <input id="pre-idle" type="number" min="0.1" max="30" step="0.1" value="1" required></label><label>Contact <input id="contact" type="number" min="0.1" max="30" step="0.1" value="2" required></label><label>After <input id="post-idle" type="number" min="0.1" max="30" step="0.1" value="1" required></label></fieldset>
+      </form>
+      <div class="setup-action"><p id="block-help">Pilot: hands away, four corners, center, then two slow traversals.</p><button id="start" class="primary" disabled>Start pilot</button></div>
+      <details class="small"><summary>Collection and validation details</summary><p>The highlight marks the intended physical location; this screen does not score your input. Position collection uses three randomized training passes and a separate validation pass after a repositioning break. No model is fitted here.</p></details>
+    </section>
+    <section class="exercise" aria-label="Live capture cues">
+      <div class="board-wrap"><div class="orientation">↑ TOP · CapKey upright</div><div class="board" id="board"><div id="grid"></div><svg id="overlay" viewBox="0 0 50 50" aria-hidden="true"><defs><marker id="arrowhead" markerWidth="4" markerHeight="4" refX="3" refY="2" orient="auto"><path d="M0,0 L4,2 L0,4 Z"/></marker></defs><line id="path" marker-end="url(#arrowhead)"/><circle id="point" r="2"/></svg></div><p class="small">4 × 4 physical regions · row 1 at top, column 1 at left</p></div>
+      <div class="cue-panel"><p id="progress" class="eyebrow">READY WHEN YOU ARE</p><h2 id="cue">Waiting for device</h2><div id="countdown" class="countdown" aria-label="Seconds remaining">—</div><p id="instruction" aria-live="polite">Connecting and checking the data stream…</p><p id="target-label" class="target-label"></p><p id="reason"></p><progress id="progress-bar" value="0" max="1"></progress></div>
+    </section>
+    <label class="audio-option"><input id="sound" type="checkbox" checked> Audible cues · high tone to touch, low tone to release</label><p id="audio-status" class="small"></p>
+    <div class="controls"><button id="pause" disabled>Pause</button><button id="resume" disabled>Resume</button><button id="skip" disabled>Skip target</button><button id="mistake" disabled>Mark previous mistake</button><button id="stop" class="danger">Stop recording</button></div>
+    <p class="small">Pause preserves the stream and excludes the interrupted attempt. Resume retries that target with a new trial ID. Mistake marks and skipped targets never erase data.</p>
+    <p id="error" class="error" role="alert" hidden></p>
+    <section class="health" aria-labelledby="health-title"><h2 id="health-title">Capture health</h2><div class="metrics"><div><span>Samples</span><strong id="samples">0</strong></div><div><span>Observed rate</span><strong id="rate">—</strong></div><div><span>Device drops</span><strong id="drops">0</strong></div><div><span>Frame / scan gaps</span><strong id="gaps">0 / 0</strong></div></div><p id="masks">Channel validity: waiting for samples</p><p id="metadata">Firmware metadata: waiting</p><p id="issues" class="small"></p><p class="small">Saved continuously to <code id="session-dir">—</code>. Raw wire bytes, decoded frames and intent labels stay separate.</p></section>
+  </main>
+</body>
+</html>

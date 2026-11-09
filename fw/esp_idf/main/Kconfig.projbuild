@@ -1,0 +1,17 @@
+menu "Swipe"
+config SWIPE_DIAGNOSTIC_CAPTURE
+    bool "Legacy diagnostic build flag (no runtime effect)"
+    default n
+    help
+        Retained for compatibility with existing build configurations.
+        All builds now recognize continuously. A host HELLO command enables
+        raw samples and actual gesture events; STOP disables telemetry only.
+config SWIPE_CAPTURE_CHARGE_TIMES
+    int "Charge/discharge cycles per measurement"
+    range 50 2000
+    default 200
+    help
+        Lower values increase scan rate but reduce count resolution.
+        The recorder reports this setting and scales the hardware active
+        threshold relative to the original 800-cycle configuration.
+endmenu

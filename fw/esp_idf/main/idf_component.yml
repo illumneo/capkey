@@ -1,0 +1,7 @@
+dependencies:
+  idf:
+    version: '>=5.0.0'
+  espressif/esp_tinyusb:
+    version: '1.7.6~2'
+  espressif/tinyusb:
+    version: '0.19.0~1'
